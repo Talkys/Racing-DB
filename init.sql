@@ -132,3 +132,19 @@ CREATE TABLE article_texts (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (article_id, language)
 );
+
+-- # MOCK DATA ENTRIES # --
+
+INSERT INTO categories (id, name, description, is_active) VALUES
+  ('f1', 'Formula 1', 'The pinnacle of open-wheel single-seater motorsport, featuring hybrid power units and world-renowned constructors.', true),
+  ('motogp', 'MotoGP', 'The premier class of motorcycle road racing, showcasing high-performance 1000cc prototype bikes.', true),
+  ('wec', 'FIA World Endurance Championship', 'Multi-class sports car racing featuring Hypercars and GT cars battling in endurance events including the 24 Hours of Le Mans.', true),
+  ('indycar', 'IndyCar Series', 'North America premier open-wheel racing series featuring oval, road, and street circuit competition.', true),
+  ('wrc', 'World Rally Championship', 'The ultimate off-road competition, challenging drivers and co-drivers across gravel, snow, and asphalt stages worldwide.', true),
+  ('formula-e', 'Formula E', 'All-electric single-seater championship racing through street circuits in major global cities.', true),
+  ('nascar-cup', 'NASCAR Cup Series', 'The top racing series of stock car racing in North America, primarily contested on oval tracks.', true),
+  ('imsa', 'IMSA WeatherTech SportsCar Championship', 'Premier North American endurance and sports car racing series featuring GTP, LMP2, and GTD classes.', true),
+  ('f2', 'Formula 2', 'Official feeder series for Formula 1 featuring identical chassis and engine specifications to test driver skill.', true),
+  ('supercars', 'Repco Supercars Championship', 'Australia premier touring car racing series, featuring high-powered V8 race cars.', true),
+  ('superbike', 'World Superbike (WorldSBK)', 'Production-based motorcycle road racing championship featuring modified street bikes.', true),
+  ('dtm', 'Deutsche Tourenwagen Masters', 'Historic German touring car series operating under GT3 specification rules.', true)
