@@ -1,13 +1,5 @@
-# JDK (local toolchain)
-.jdk/
-
-# Gradle / Kotlin
-back-end/.gradle/
-back-end/.kotlin/
-back-end/build/
-
 # IDE
-.idea/
 .vscode/
-*.iml
-.DS_Store
+
+# TESTING
+app.log
