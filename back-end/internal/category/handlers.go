@@ -1,11 +1,10 @@
-package handlers
+package category
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 
-	"backend/internal/services"
+	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -13,11 +12,12 @@ import (
 
 type CategoryHandler struct {
 	DB      *sql.DB
-	service *services.CategoryService
+	service *CategoryService
+	log     *betterlogger.Logger
 }
 
 func NewCategoryHandler(db *sql.DB) *CategoryHandler {
-	return &CategoryHandler{DB: db, service: services.NewCategoryService(db)}
+	return &CategoryHandler{DB: db, service: NewCategoryService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *CategoryHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -43,7 +43,7 @@ func (h *CategoryHandler) ListCategories(w http.ResponseWriter, r *http.Request)
 
 	categories, err := h.service.ListCategories(ctx)
 	if err != nil {
-		log.Println(err.Error())
+		h.log.Error("%s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -55,17 +55,17 @@ func (h *CategoryHandler) SearchCategories(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 
 	query := r.URL.Query()
-	log.Println(r.URL)
+	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(query)
 	if err != nil {
-		log.Println(err.Error())
+		h.log.Error("%s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	categories, err := h.service.SearchCategories(ctx, *sc)
 	if err != nil {
-		log.Println(err.Error())
+		h.log.Error("%s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

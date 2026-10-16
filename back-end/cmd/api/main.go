@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend/internal/database"
-	"backend/internal/handlers"
+	"backend/internal/category"
 	logger "backend/modules/betterlogger"
+	"backend/modules/database"
 	"net/http"
 	"os"
 )
@@ -38,7 +38,7 @@ func main() {
 
 	log.Info("Registering routes...")
 	// REGISTER HANDLERS HERE (MAYBE THERE'S A WAY TO DO BETTER)
-	categoryHandler := handlers.NewCategoryHandler(db)
+	categoryHandler := category.NewCategoryHandler(db)
 	categoryHandler.RegisterRoutes(mux)
 
 	port := ":5000"

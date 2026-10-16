@@ -1,8 +1,7 @@
-package repositories
+package category
 
 import (
-	"backend/internal/database"
-	"backend/internal/models"
+	"backend/modules/database"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"context"
@@ -48,7 +47,7 @@ func NewCategoryRepository() *CategoryRepository {
 	return &CategoryRepository{cfg: CategorySearchConfig}
 }
 
-func (r *CategoryRepository) SearchCategories(ctx context.Context, sc queries.SearchCriteria) ([]models.Category, error) {
+func (r *CategoryRepository) SearchCategories(ctx context.Context, sc queries.SearchCriteria) ([]Category, error) {
 	exec := database.ExtractTx(ctx)
 	if exec == nil {
 		return nil, fmt.Errorf("No transaction provided")
@@ -66,17 +65,14 @@ func (r *CategoryRepository) SearchCategories(ctx context.Context, sc queries.Se
 		return nil, err
 	}
 
-	var categories []models.Category
-	fmt.Println(query)
-	fmt.Println(args)
+	var categories []Category
 
 	for rows.Next() {
-		var c models.Category
+		var c Category
 		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.Is_active); err != nil {
 			return nil, err
 		}
 		categories = append(categories, c)
-		fmt.Println(c)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -86,7 +82,7 @@ func (r *CategoryRepository) SearchCategories(ctx context.Context, sc queries.Se
 	return categories, nil
 }
 
-func (r *CategoryRepository) ListActiveCategories(ctx context.Context) ([]models.Category, error) {
+func (r *CategoryRepository) ListActiveCategories(ctx context.Context) ([]Category, error) {
 	exec := database.ExtractTx(ctx)
 	if exec == nil {
 		return nil, fmt.Errorf("No transaction provided")
@@ -98,10 +94,10 @@ func (r *CategoryRepository) ListActiveCategories(ctx context.Context) ([]models
 		return nil, err
 	}
 
-	var categories []models.Category
+	var categories []Category
 
 	for rows.Next() {
-		var c models.Category
+		var c Category
 		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.Is_active); err != nil {
 			return nil, err
 		}
