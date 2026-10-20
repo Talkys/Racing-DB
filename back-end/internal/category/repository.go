@@ -5,7 +5,6 @@ import (
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"context"
-	"fmt"
 )
 
 var CategorySearchConfig = queries.EntitySearchConfig{
@@ -17,7 +16,7 @@ var CategorySearchConfig = queries.EntitySearchConfig{
 			DBColumn: "name",
 			AllowedOps: map[string]string{
 				constants.Equal:    "=",
-				constants.NotEqual: "!=",
+				constants.NotEqual: "<>",
 				constants.Contains: "ilike",
 			},
 		},
@@ -48,48 +47,9 @@ func NewCategoryRepository() *CategoryRepository {
 }
 
 func (r *CategoryRepository) SearchCategories(ctx context.Context, sc queries.SearchCriteria) ([]Category, error) {
-	exec := database.ExtractTx(ctx)
-	if exec == nil {
-		return nil, fmt.Errorf("No transaction provided")
-	}
-
 	cols := []string{"id", "name", "description", "is_active"}
-	query, args, err := queries.BuildSearchQuery(cols, "categories", r.cfg, sc)
 
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := exec.QueryContext(ctx, query, args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	var categories []Category
-
-	for rows.Next() {
-		var c Category
-		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.Is_active); err != nil {
-			return nil, err
-		}
-		categories = append(categories, c)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return categories, nil
-}
-
-func (r *CategoryRepository) ListActiveCategories(ctx context.Context) ([]Category, error) {
-	exec := database.ExtractTx(ctx)
-	if exec == nil {
-		return nil, fmt.Errorf("No transaction provided")
-	}
-
-	query := "select id, name, description, is_active from categories where is_active = true"
-	rows, err := exec.QueryContext(ctx, query)
+	rows, err := database.PerformSearch(ctx, sc, cols, "categories", r.cfg)
 	if err != nil {
 		return nil, err
 	}

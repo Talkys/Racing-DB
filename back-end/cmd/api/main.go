@@ -1,21 +1,30 @@
 package main
 
 import (
+	"backend/internal/article"
+	"backend/internal/articletext"
+	"backend/internal/car"
 	"backend/internal/category"
-	logger "backend/modules/betterlogger"
+	"backend/internal/chassis"
+	"backend/internal/circuit"
+	"backend/internal/driver"
+	"backend/internal/engine"
+	"backend/internal/race"
+	"backend/internal/team"
+	"backend/modules/betterlogger"
 	"backend/modules/database"
 	"net/http"
 	"os"
 )
 
 func main() {
-	err := logger.Init("app.log")
+	err := betterlogger.Init("app.log")
 	if err != nil {
 		panic(err)
 	}
-	defer logger.Close()
+	defer betterlogger.Close()
 
-	log := logger.GetInstance()
+	log := betterlogger.GetInstance()
 
 	log.Info("Starting application initialization...")
 
@@ -40,6 +49,33 @@ func main() {
 	// REGISTER HANDLERS HERE (MAYBE THERE'S A WAY TO DO BETTER)
 	categoryHandler := category.NewCategoryHandler(db)
 	categoryHandler.RegisterRoutes(mux)
+
+	circuitHandler := circuit.NewCircuitHandler(db)
+	circuitHandler.RegisterRoutes(mux)
+
+	driverHandler := driver.NewDriverHandler(db)
+	driverHandler.RegisterRoutes(mux)
+
+	raceHandler := race.NewRaceHandler(db)
+	raceHandler.RegisterRoutes(mux)
+
+	teamHandler := team.NewTeamHandler(db)
+	teamHandler.RegisterRoutes(mux)
+
+	engineHandler := engine.NewEngineHandler(db)
+	engineHandler.RegisterRoutes(mux)
+
+	chassisHandler := chassis.NewChassisHandler(db)
+	chassisHandler.RegisterRoutes(mux)
+
+	carHandler := car.NewCarHandler(db)
+	carHandler.RegisterRoutes(mux)
+
+	articleHandler := article.NewArticleHandler(db)
+	articleHandler.RegisterRoutes(mux)
+
+	articletextHandler := articletext.NewArticleTextHandler(db)
+	articletextHandler.RegisterRoutes(mux)
 
 	port := ":5000"
 	log.Info("Starting server on port %s...", port)

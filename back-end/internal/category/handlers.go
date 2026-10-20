@@ -25,30 +25,9 @@ func (h *CategoryHandler) RegisterRoutes(mux *http.ServeMux) {
 		routes.BuildRoute(
 			"GET",
 			constants.BaseApiUrl_V1,
-			"/active_categories",
-		),
-		h.ListCategories)
-
-	mux.HandleFunc(
-		routes.BuildRoute(
-			"GET",
-			constants.BaseApiUrl_V1,
 			"/categories",
 		),
 		h.SearchCategories)
-}
-
-func (h *CategoryHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	categories, err := h.service.ListCategories(ctx)
-	if err != nil {
-		h.log.Error("%s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	routes.WriteJSONResponse(w, http.StatusOK, categories)
 }
 
 func (h *CategoryHandler) SearchCategories(w http.ResponseWriter, r *http.Request) {

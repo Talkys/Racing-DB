@@ -35,20 +35,3 @@ func (s *CategoryService) SearchCategories(ctx context.Context, sc queries.Searc
 	tx.Commit()
 	return categories, nil
 }
-
-func (s *CategoryService) ListCategories(ctx context.Context) ([]Category, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
-
-	var categories []Category
-
-	if categories, err = s.core.ListCategories(ctxTx); err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return categories, nil
-}

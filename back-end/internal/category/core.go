@@ -18,7 +18,3 @@ func NewCategoryCore() *CategoryCore {
 func (c *CategoryCore) SearchCategories(ctx context.Context, sc queries.SearchCriteria) ([]Category, error) {
 	return c.repo.SearchCategories(ctx, sc)
 }
-
-func (c *CategoryCore) ListCategories(ctx context.Context) ([]Category, error) {
-	return c.repo.ListActiveCategories(ctx)
-}
