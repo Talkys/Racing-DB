@@ -30,6 +30,17 @@ func (h *CategoryHandler) RegisterRoutes(mux *http.ServeMux) {
 		h.SearchCategories)
 }
 
+// SearchCategories searches categories based on URL query criteria.
+// @Summary Search categories
+// @Description Retrieve a list of categories filtered, sorted, and paginated by query criteria
+// @ID search-categories
+// @Produce json
+// @Param page query int false "Page number for pagination (default: 1)"
+// @Param filter query string false "Filter expression in format: column,operator,value (e.g. name,eq,electronics)"
+// @Param sort query string false "Sort expression in format: column,direction (e.g. name,asc)"
+// @Success 200 {array} Category "List of matching categories"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /categories [get]
 func (h *CategoryHandler) SearchCategories(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
