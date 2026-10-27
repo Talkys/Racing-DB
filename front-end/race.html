@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race - RaceDB.org</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body class="body-class">
+
+<div class="page">
+    <div class="checkered-bar"></div>
+
+    <header class="header">
+        <div>
+            <h1 class="logo-title"><a href="index.html" class="no-underline hover:no-underline">RaceDB<small>.org</small></a></h1>
+            <div class="logo-tagline">The Internet Motorsport Database — Since 1999</div>
+        </div>
+        <form action="#" class="m-0 text-right" data-header-search>
+            <label for="header-q" class="search-label">Search Database:</label>
+            <input type="text" id="header-q" name="q" size="14" class="field">
+            <select name="type" class="field">
+                <option value="drivers.html" data-col="last_name">Drivers</option>
+                <option value="cars.html" data-col="name">Cars</option>
+                <option value="races.html" data-col="name">Grand Prix</option>
+                <option value="circuits.html" data-col="name">Circuits</option>
+                <option value="teams.html" data-col="name">Teams</option>
+            </select>
+            <button type="submit" class="btn">Go!</button>
+        </form>
+    </header>
+
+    <nav class="nav-bar">
+        <a href="index.html">Home</a>
+        <a href="categories.html">Categories</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="races.html" aria-current="page">Races</a>
+        <a href="circuits.html">Circuits</a>
+        <a href="teams.html">Teams</a>
+        <a href="cars.html">Cars</a>
+        <a href="engines.html">Engines</a>
+        <a href="chassis.html">Chassis</a>
+    </nav>
+
+    <div class="p-1.5">
+        <p class="mt-0 mb-1.5"><a href="races.html">&lt;&lt; Back to races</a></p>
+            <p data-show-if="loading" class="my-1.5">Loading&hellip;</p>
+            <p data-error hidden class="my-1.5 text-flame"></p>
+
+        <div data-show-if="loaded" hidden>
+            <div class="grid gap-x-1.5 md:grid-cols-2">
+                <div>
+                    <div class="box-title" data-field="name">Race</div>
+                    <dl class="box-content kv">
+                        <dt>Date</dt><dd data-field="date"></dd>
+                        <dt>Season</dt><dd><span data-field="season"></span> &middot; Round <span data-field="round"></span></dd>
+                        <dt>Category</dt><dd><a href="#" data-field="category" data-field-href="categoryHref"></a></dd>
+                        <dt>Winner</dt><dd data-field="winner"></dd>
+                    </dl>
+                </div>
+                <div>
+                    <div class="box-title">Circuit</div>
+                    <dl class="box-content kv">
+                        <dt>Name</dt><dd data-field="circuitName"></dd>
+                        <dt>Location</dt><dd data-field="circuitLocation"></dd>
+                        <dt>Country</dt><dd data-field="circuitCountry"></dd>
+                        <dt>Length</dt><dd><span data-field="circuitLength"></span> km</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="box-title">Race Data</div>
+            <div class="box-content">
+                <div data-show-if="f1" hidden>
+                    <dl class="kv">
+                        <dt>Fastest lap</dt><dd><span data-field="fastestLapDriver"></span> &middot; lap <span data-field="fastestLapNumber"></span> &middot; <span data-field="fastestLapTime"></span></dd>
+                        <dt>Safety car deployments</dt><dd data-field="safetyCars"></dd>
+                        <dt>Track temperature</dt><dd><span data-field="trackTemperature"></span> &deg;C</dd>
+                    </dl>
+                    <table class="data-table mt-1.5" data-section="tyre-strategies">
+                        <thead><tr><th>Driver</th><th>Tyre stops</th></tr></thead>
+                        <tbody>
+                            <template>
+                                <tr><td data-field="driver"></td><td data-field="stops"></td></tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <dl class="kv" data-show-if="motogp" hidden>
+                    <dt>Rider of the day</dt><dd data-field="riderOfTheDay"></dd>
+                    <dt>Holeshot winner</dt><dd data-field="holeshotWinner"></dd>
+                    <dt>Tyres</dt><dd>front <span data-field="tyreFront"></span> &middot; rear <span data-field="tyreRear"></span></dd>
+                    <dt>Weather</dt><dd data-field="weather"></dd>
+                </dl>
+                <dl class="kv" data-show-if="wec" hidden>
+                    <dt>Laps completed</dt><dd data-field="totalLaps"></dd>
+                    <dt>Hypercar winner</dt><dd data-field="hypercarWinner"></dd>
+                    <dt>LMGT3 winner</dt><dd data-field="lmgt3Winner"></dd>
+                    <dt>Full course yellows</dt><dd data-field="fcyCount"></dd>
+                    <dt>Red flag</dt><dd><span data-field="redFlagMinutes"></span> min</dd>
+                </dl>
+                <pre class="m-0 whitespace-pre-wrap font-mono" data-show-if="rawPayload" data-field="rawPayload" hidden></pre>
+            </div>
+
+            <div class="box-title">Articles</div>
+            <div class="box-content" data-section="articles">
+                <ul class="m-0 list-none p-0">
+                    <template>
+                        <li>&bull; <a href="#" class="font-bold" data-field="title" data-field-href="href"></a>
+                            <span class="text-[10px] text-[#8899aa]">(<span data-field="kind"></span>, <span data-field="published"></span>, languages: <span data-field="languages"></span>)</span>
+                        </li>
+                    </template>
+                </ul>
+                <p data-empty hidden class="m-0">No articles.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkered-bar"></div>
+
+    <footer class="footer">
+        &copy; 1999–2003 RaceDB Interactive Systems Ltd. All Rights Reserved.
+    </footer>
+
+</div>
+
+<script type="module" src="/src/lib/header.ts"></script>
+<script type="module" src="/src/pages/race.ts"></script>
+</body>
+</html>

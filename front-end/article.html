@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article - RaceDB.org</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body class="body-class">
+
+<div class="page">
+    <div class="checkered-bar"></div>
+
+    <header class="header">
+        <div>
+            <h1 class="logo-title"><a href="index.html" class="no-underline hover:no-underline">RaceDB<small>.org</small></a></h1>
+            <div class="logo-tagline">The Internet Motorsport Database — Since 1999</div>
+        </div>
+        <form action="#" class="m-0 text-right" data-header-search>
+            <label for="header-q" class="search-label">Search Database:</label>
+            <input type="text" id="header-q" name="q" size="14" class="field">
+            <select name="type" class="field">
+                <option value="drivers.html" data-col="last_name">Drivers</option>
+                <option value="cars.html" data-col="name">Cars</option>
+                <option value="races.html" data-col="name">Grand Prix</option>
+                <option value="circuits.html" data-col="name">Circuits</option>
+                <option value="teams.html" data-col="name">Teams</option>
+            </select>
+            <button type="submit" class="btn">Go!</button>
+        </form>
+    </header>
+
+    <nav class="nav-bar">
+        <a href="index.html">Home</a>
+        <a href="categories.html">Categories</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="races.html">Races</a>
+        <a href="circuits.html">Circuits</a>
+        <a href="teams.html">Teams</a>
+        <a href="cars.html">Cars</a>
+        <a href="engines.html">Engines</a>
+        <a href="chassis.html">Chassis</a>
+    </nav>
+
+    <div class="p-1.5">
+            <p data-show-if="loading" class="my-1.5">Loading&hellip;</p>
+            <p data-error hidden class="my-1.5 text-flame"></p>
+
+        <div data-show-if="loaded" hidden>
+            <div class="box-title" data-field="title">Article</div>
+            <div class="box-content">
+                <p class="mt-0 text-[10px] text-[#8899aa]">
+                    About: <a href="#" data-show-if="entityHref" data-field="entityType" data-field-href="entityHref" hidden></a><span data-show-if="entityPlain" data-field="entityPlain" hidden></span>
+                    &bull; <span data-field="kind"></span> &bull; Published <span data-field="published"></span>
+                </p>
+
+                <p data-show-if="noTexts" hidden>This article has no text yet.</p>
+
+                <div data-show-if="hasTexts" hidden>
+                    <label class="text-[10px]">Language:
+                        <select class="field" data-section="languages">
+                            <template><option data-field="label" data-field-value="language"></option></template>
+                        </select>
+                    </label>
+                    <p class="font-bold italic text-[#ffffaa]" data-show-if="summary" data-field="summary" hidden></p>
+                    <div class="md-body" data-markdown></div>
+                    <p class="mb-0 text-[10px] text-[#8899aa]">Updated <span data-field="updated"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkered-bar"></div>
+
+    <footer class="footer">
+        &copy; 1999–2003 RaceDB Interactive Systems Ltd. All Rights Reserved.
+    </footer>
+
+</div>
+
+<script type="module" src="/src/lib/header.ts"></script>
+<script type="module" src="/src/pages/article.ts"></script>
+</body>
+</html>

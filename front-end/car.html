@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car - RaceDB.org</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body class="body-class">
+
+<div class="page">
+    <div class="checkered-bar"></div>
+
+    <header class="header">
+        <div>
+            <h1 class="logo-title"><a href="index.html" class="no-underline hover:no-underline">RaceDB<small>.org</small></a></h1>
+            <div class="logo-tagline">The Internet Motorsport Database — Since 1999</div>
+        </div>
+        <form action="#" class="m-0 text-right" data-header-search>
+            <label for="header-q" class="search-label">Search Database:</label>
+            <input type="text" id="header-q" name="q" size="14" class="field">
+            <select name="type" class="field">
+                <option value="drivers.html" data-col="last_name">Drivers</option>
+                <option value="cars.html" data-col="name">Cars</option>
+                <option value="races.html" data-col="name">Grand Prix</option>
+                <option value="circuits.html" data-col="name">Circuits</option>
+                <option value="teams.html" data-col="name">Teams</option>
+            </select>
+            <button type="submit" class="btn">Go!</button>
+        </form>
+    </header>
+
+    <nav class="nav-bar">
+        <a href="index.html">Home</a>
+        <a href="categories.html">Categories</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="races.html">Races</a>
+        <a href="circuits.html">Circuits</a>
+        <a href="teams.html">Teams</a>
+        <a href="cars.html" aria-current="page">Cars</a>
+        <a href="engines.html">Engines</a>
+        <a href="chassis.html">Chassis</a>
+    </nav>
+
+    <div class="p-1.5">
+        <p class="mt-0 mb-1.5"><a href="cars.html">&lt;&lt; Back to cars</a></p>
+            <p data-show-if="loading" class="my-1.5">Loading&hellip;</p>
+            <p data-error hidden class="my-1.5 text-flame"></p>
+
+        <div data-show-if="loaded" hidden>
+            <div class="box-title" data-field="name">Car</div>
+            <dl class="box-content kv">
+                <dt>Season</dt><dd data-field="season"></dd>
+                <dt>Category</dt><dd><a href="#" data-field="category" data-field-href="categoryHref"></a></dd>
+            </dl>
+
+            <div class="grid gap-x-1.5 md:grid-cols-3">
+                <div>
+                    <div class="box-title">Team</div>
+                    <dl class="box-content kv">
+                        <dt>Name</dt><dd data-field="teamName"></dd>
+                        <dt>Country</dt><dd data-field="teamCountry"></dd>
+                        <dt>Founded</dt><dd data-field="teamFounded"></dd>
+                    </dl>
+                </div>
+                <div>
+                    <div class="box-title">Engine</div>
+                    <dl class="box-content kv">
+                        <dt>Model</dt><dd data-field="engineName"></dd>
+                        <dt>Layout</dt><dd data-field="engineConfiguration"></dd>
+                        <dt>Displacement</dt><dd><span data-field="engineDisplacement"></span> cc</dd>
+                        <dt>Cylinders</dt><dd data-field="engineCylinders"></dd>
+                        <dt>Aspiration</dt><dd data-field="engineAspiration"></dd>
+                        <dt>Power</dt><dd><span data-field="enginePower"></span> kW</dd>
+                    </dl>
+                </div>
+                <div>
+                    <div class="box-title">Chassis</div>
+                    <dl class="box-content kv">
+                        <dt>Model</dt><dd data-field="chassisName"></dd>
+                        <dt>Material</dt><dd data-field="chassisMaterial"></dd>
+                        <dt>Wheelbase</dt><dd><span data-field="chassisWheelbase"></span> mm</dd>
+                        <dt>Weight</dt><dd><span data-field="chassisWeight"></span> kg</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="box-title">Parts</div>
+            <div class="box-content">
+                <dl class="kv" data-section="parts">
+                    <dt>Gearbox</dt><dd><span data-field="gearboxType"></span>, <span data-field="gearboxSpeeds"></span> speeds</dd>
+                    <dt>Brakes</dt><dd>front <span data-field="brakesFront"></span> &middot; rear <span data-field="brakesRear"></span></dd>
+                    <dt>Suspension</dt><dd>front <span data-field="suspensionFront"></span> &middot; rear <span data-field="suspensionRear"></span></dd>
+                    <dt>Tyre supplier</dt><dd data-field="tyreSupplier"></dd>
+                    <template>
+                        <dt data-field="key"></dt><dd data-field="value"></dd>
+                    </template>
+                </dl>
+            </div>
+
+            <div class="box-title">Articles</div>
+            <div class="box-content" data-section="articles">
+                <ul class="m-0 list-none p-0">
+                    <template>
+                        <li>&bull; <a href="#" class="font-bold" data-field="title" data-field-href="href"></a>
+                            <span class="text-[10px] text-[#8899aa]">(<span data-field="kind"></span>, <span data-field="published"></span>, languages: <span data-field="languages"></span>)</span>
+                        </li>
+                    </template>
+                </ul>
+                <p data-empty hidden class="m-0">No articles.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkered-bar"></div>
+
+    <footer class="footer">
+        &copy; 1999–2003 RaceDB Interactive Systems Ltd. All Rights Reserved.
+    </footer>
+
+</div>
+
+<script type="module" src="/src/lib/header.ts"></script>
+<script type="module" src="/src/pages/car.ts"></script>
+</body>
+</html>

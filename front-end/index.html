@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaceDB.org - The Internet Motorsport Database (v2.4)</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body class="body-class">
+
+<div class="page">
+    <div class="checkered-bar"></div>
+
+    <header class="header">
+        <div>
+            <h1 class="logo-title">RaceDB<small>.org</small></h1>
+            <div class="logo-tagline">The Internet Motorsport Database — Since 1999</div>
+        </div>
+        <form action="#" class="m-0 text-right" data-header-search>
+            <label for="q" class="search-label">Search Database:</label>
+            <input type="text" id="q" name="q" size="14" class="field">
+            <select name="type" class="field">
+                <option value="drivers.html" data-col="last_name">Drivers</option>
+                <option value="cars.html" data-col="name">Cars</option>
+                <option value="races.html" data-col="name">Grand Prix</option>
+                <option value="circuits.html" data-col="name">Circuits</option>
+                <option value="teams.html" data-col="name">Teams</option>
+            </select>
+            <button type="submit" class="btn">Go!</button>
+        </form>
+    </header>
+
+    <nav class="nav-bar">
+        <a href="index.html" aria-current="page">Home</a>
+        <a href="categories.html">Categories</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="races.html">Races</a>
+        <a href="circuits.html">Circuits</a>
+        <a href="teams.html">Teams</a>
+        <a href="cars.html">Cars</a>
+        <a href="engines.html">Engines</a>
+        <a href="chassis.html">Chassis</a>
+    </nav>
+
+    <div class="ticker-bar">
+        <div class="ticker-text" data-field="ticker">Loading latest updates…</div>
+    </div>
+
+    <div class="layout">
+
+        <aside>
+            <div class="box-title">Browse Categories</div>
+            <div class="box-content" data-section="categories">
+                <ul class="m-0 list-none p-0">
+                    <template>
+                        <li>&bull; <a href="#" data-field="name" data-field-href="href"></a></li>
+                    </template>
+                </ul>
+            </div>
+
+            <div class="box-title">Motorsport WebRing</div>
+            <div class="box-content text-center">
+                <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30'><rect width='120' height='30' fill='%23333'/><text x='10' y='20' fill='%23ffcc00' font-family='sans-serif' font-size='10'>🏁 PADDOCK RING</text></svg>" alt="WebRing" class="mx-auto mb-[3px]">
+                [ <a href="#">&lt;&lt; Prev</a> | <a href="#">Random</a> | <a href="#">Next &gt;&gt;</a> ]<br>
+                <small class="text-[10px]"><a href="#">[Join the Ring]</a></small>
+            </div>
+        </aside>
+
+        <main>
+            <div class="box-title">Featured Driver of the Day</div>
+            <div class="box-content" data-section="featured">
+                <div class="flex gap-2">
+                    <div class="photo shrink-0" data-field="photo">[ PHOTO ]</div>
+                    <div>
+                        <b class="text-sm text-gold" data-field="name"></b> <span class="text-[#aaa]">(<span data-field="code"></span>)</span><br>
+                        <b>Nationality:</b> <span data-field="nationality"></span>
+                    </div>
+                </div>
+                <div data-show-if="teaser" hidden>
+                    <hr>
+                    <b>Biography Teaser:</b> <span data-field="teaser"></span> <a href="#" data-field-href="href">[Read Full Bio &gt;&gt;]</a>
+                </div>
+            </div>
+
+            <div class="box-title">Latest Races</div>
+            <div class="box-content" data-section="latest-races">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event Name</th>
+                            <th>Category</th>
+                            <th>Circuit</th>
+                            <th>Winner</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template>
+                            <tr>
+                                <td data-field="date"></td>
+                                <td><a href="#" class="font-bold" data-field="name" data-field-href="href"></a></td>
+                                <td data-field="category"></td>
+                                <td data-field="circuit"></td>
+                                <td data-field="winner"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="box-title">Latest Articles</div>
+            <div class="box-content" data-section="articles">
+                <ul class="m-0 list-none p-0">
+                    <template>
+                        <li>&bull; <a href="#" class="font-bold" data-field="title" data-field-href="href"></a><span data-show-if="summary"> - <i data-field="summary"></i></span></li>
+                    </template>
+                </ul>
+            </div>
+        </main>
+
+        <aside>
+            <div class="box-title">Driver Index</div>
+            <div class="box-content" data-section="drivers">
+                <ul class="m-0 list-none p-0">
+                    <template>
+                        <li>&bull; <a href="#" data-field="name" data-field-href="href"></a> (<span data-field="code"></span>)</li>
+                    </template>
+                </ul>
+            </div>
+
+            <div class="box-title">Random Quote</div>
+            <div class="box-content">
+                <i class="text-[#ffffaa]">"If you no longer go for a gap that exists, you are no longer a racing driver."</i>
+                <div class="text-right">— <b>Ayrton Senna</b>, Adelaide 1990</div>
+            </div>
+
+            <div class="box-title">Affiliates / Badges</div>
+            <div class="box-content flex flex-col items-center gap-[3px]">
+                <div class="badge-88x31"><span>HTML 4.01</span>VALIDATED</div>
+                <div class="badge-88x31 border-[#00ffcc]"><span>MADE WITH</span>NOTEPAD</div>
+                <div class="badge-88x31 border-[#ff9900]"><span>GET MICROSOFT</span>INTERNET EXP.</div>
+            </div>
+
+            </aside>
+    </div>
+
+    <div class="checkered-bar"></div>
+
+    <footer class="footer">
+        <b>You are visitor number:</b><br>
+        <div class="counter">0048912</div>
+        <p class="my-3 text-[10px]">
+            [ <a href="#">About RaceDB</a> | <a href="#">FAQ / Submissions Guidelines</a> | <a href="#">Advertise</a> | <a href="#">Privacy Policy</a> | <a href="#">Link to Us</a> ]
+        </p>
+        <p class="my-3 text-[10px]">
+            RaceDB.org is an independent fan-run archive and is not affiliated with FIA, FOM, ACO, NASCAR or any respective sanctioning bodies.<br>
+            All trademarks, car chassis numbers, and team designations are property of their respective owners.<br>
+            Best viewed with <b>Internet Explorer 5.5+</b> or <b>Netscape Navigator 6.0</b> at <b>1024x768 resolution</b> (16-bit High Color).
+        </p>
+        <p class="my-3 text-[10px]">&copy; 1999–2003 RaceDB Interactive Systems Ltd. All Rights Reserved.</p>
+    </footer>
+
+</div>
+
+<script type="module" src="/src/lib/header.ts"></script>
+<script type="module" src="/src/pages/home.ts"></script>
+</body>
+</html>

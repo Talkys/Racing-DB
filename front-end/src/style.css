@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+@theme {
+  --color-panel: #1b263b;
+  --color-panel-dark: #101826;
+  --color-panel-row: #152233;
+  --color-edge: #415a77;
+  --color-gold: #ffcc00;
+  --color-flame: #ff3300;
+  --color-term: #39ff14;
+  --color-chrome: #d4d0c8;
+  --font-display: "Impact", "Arial Black", sans-serif;
+  --font-ui: Tahoma, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+  --animate-ticker: ticker 30s linear infinite;
+
+  @keyframes ticker {
+    from { transform: translateX(100%); }
+    to { transform: translateX(-100%); }
+  }
+}
+
+@layer base {
+  a {
+    @apply text-gold underline hover:text-flame hover:no-underline;
+  }
+  hr {
+    @apply my-2 border-0 border-t border-edge;
+  }
+}
+
+@layer components {
+  .body-class {
+    @apply bg-zinc-800 text-white m-0 p-2.5 text-[11px] font-sans;
+  }
+
+  .page {
+    @apply mx-auto w-full max-w-195 bg-panel;
+    border: 3px outset #778899;
+  }
+
+  .checkered-bar {
+    @apply h-2.5 bg-[#b8b8b8];
+    background-image:
+      linear-gradient(45deg, #000 25%, transparent 25%),
+      linear-gradient(-45deg, #000 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #000 75%),
+      linear-gradient(-45deg, transparent 75%, #000 75%);
+    background-size: 10px 10px;
+    background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+  }
+
+  .header {
+    @apply flex items-center justify-between gap-2 p-1.5 px-2.5 border-b-2 border-gold bg-linear-to-b from-[#770000] to-[#220000];
+  }
+  .logo-title {
+    @apply m-0 font-display text-[28px] tracking-[2px] text-gold;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .logo-title small {
+    @apply text-sm text-flame;
+  }
+  .logo-tagline {
+    @apply text-[10px] text-white italic;
+  }
+  .search-label {
+    @apply block text-[10px] text-[#ccc];
+  }
+
+  .nav-bar {
+    @apply flex flex-wrap gap-1 bg-chrome px-1.5 py-[3px] text-[11px] font-bold border-t border-t-white border-b-2 border-b-[#404040];
+  }
+  .nav-bar a {
+    @apply bg-[#e0ded8] px-1.5 py-0.5 text-[#000080] no-underline hover:bg-[#c0c0c0] hover:text-[#000080];
+    border: 1px outset #fff;
+  }
+  .nav-bar a:hover {
+    border-style: inset;
+  }
+
+  .nav-bar a[aria-current="page"] {
+    @apply bg-[#c0c0c0];
+    border-style: inset;
+  }
+
+  .ticker-bar {
+    @apply overflow-hidden bg-black px-[5px] py-0.5 font-mono text-[11px] font-bold text-term whitespace-nowrap border-b border-b-edge;
+  }
+  .ticker-text {
+    @apply inline-block animate-ticker;
+  }
+  .ticker-bar:hover .ticker-text {
+    animation-play-state: paused;
+  }
+
+  .layout {
+    @apply grid grid-cols-1 gap-1.5 p-1.5 md:grid-cols-[160px_minmax(0,1fr)_180px];
+  }
+
+  .box-title {
+    @apply bg-linear-to-r from-[#003366] to-panel p-1 text-[11px] font-bold text-gold border-t border-t-[#5c768d] border-b border-b-black;
+  }
+  .box-content {
+    @apply mb-1.5 border border-edge bg-panel-dark p-1.5;
+  }
+
+  .field {
+    @apply bg-white p-0.5 font-ui text-[11px] text-black;
+    border: 2px inset #999;
+  }
+  .btn {
+    @apply cursor-pointer bg-chrome px-1.5 py-0.5 font-ui text-[11px] font-bold text-black;
+    border: 2px outset #ccc;
+  }
+  .btn:active {
+    border-style: inset;
+  }
+
+  .data-table {
+    @apply w-full border-collapse text-[10px];
+  }
+  .data-table th {
+    @apply border border-edge bg-[#2b3a4a] p-[3px] text-left text-gold;
+  }
+  .data-table td {
+    @apply border border-[#293847] p-[3px];
+  }
+  .data-table tr:nth-child(even) {
+    @apply bg-panel-row;
+  }
+
+  .new-badge {
+    @apply bg-yellow-300 px-0.5 text-[9px] font-bold text-red-600 border border-red-600;
+  }
+
+  .photo {
+    @apply flex h-30 w-25 items-center justify-center bg-black p-1 text-center text-[10px] font-bold text-gold;
+    border: 2px outset #fff;
+  }
+
+  .counter {
+    @apply inline-block bg-black px-1.5 py-0.5 font-mono text-xs font-bold tracking-[2px] text-[#0f0];
+    border: 2px inset #555;
+  }
+
+  .badge-88x31 {
+    @apply box-border inline-block h-[31px] w-22 border border-[#aaa] bg-[#222] align-middle font-ui text-[8px] leading-[15px] text-white no-underline;
+  }
+  .badge-88x31 span {
+    @apply block bg-[#004488] font-bold;
+  }
+
+  .footer {
+    @apply p-2.5 text-center text-[10px] text-[#8899aa] border-t border-dashed border-edge;
+  }
+
+  .filter-form {
+    @apply mb-1.5 flex flex-wrap items-center gap-1.5;
+  }
+  .data-table th[aria-sort="ascending"] a::after {
+    content: " \25B2";
+  }
+  .data-table th[aria-sort="descending"] a::after {
+    content: " \25BC";
+  }
+  .pager {
+    @apply mt-1.5 flex items-center justify-between;
+  }
+
+  /* Key/value lists on detail pages */
+  .kv {
+    @apply m-0 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5;
+  }
+  .kv dt {
+    @apply font-bold text-gold;
+  }
+  .kv dd {
+    @apply m-0;
+  }
+
+  /* Sanitized article Markdown (preflight strips element defaults) */
+  .md-body {
+    @apply text-xs leading-relaxed;
+  }
+  .md-body h1 {
+    @apply mt-2 mb-1 font-display text-lg tracking-wide text-gold;
+  }
+  .md-body h2,
+  .md-body h3 {
+    @apply mt-2 mb-1 text-sm font-bold text-gold;
+  }
+  .md-body p {
+    @apply my-1.5;
+  }
+  .md-body ul {
+    @apply my-1.5 list-disc pl-5;
+  }
+  .md-body ol {
+    @apply my-1.5 list-decimal pl-5;
+  }
+  .md-body code {
+    @apply bg-black px-1 font-mono text-term;
+  }
+  .md-body blockquote {
+    @apply my-1.5 border-l-2 border-edge pl-2 italic;
+  }
+}
