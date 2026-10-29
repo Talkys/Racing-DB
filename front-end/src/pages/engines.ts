@@ -1,7 +1,7 @@
 import { dash, initSearchPage } from '../lib/search-page.ts'
 
 initSearchPage({
-  path: 'engine',
+  path: 'engines',
   rows: (engines) => engines.map((e) => ({
     ...e,
     displacement_cc: String(e.displacement_cc),

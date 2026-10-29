@@ -144,15 +144,37 @@ export interface ArticleText {
 /** Entity name -> model, keyed by the route segment under /api/1. */
 export interface EntityMap {
   categories: Category
-  circuit: Circuit
-  driver: Driver
-  race: Race
-  team: Team
-  engine: Engine
+  circuits: Circuit
+  drivers: Driver
+  races: Race
+  teams: Team
+  engines: Engine
   chassis: Chassis
-  car: Car
-  article: Article
-  'article-text': ArticleText
+  cars: Car
+  articles: Article
+  'article-texts': ArticleText
 }
 
 export type EntityPath = keyof EntityMap
+
+/** A piece of a search preview; `match` marks words that matched the query. */
+export interface PreviewSegment {
+  text: string
+  match: boolean
+}
+
+/**
+ * GET /api/1/articles/search: one article with the text chosen for it (the requested language when it
+ * qualifies, else the best match). language/title/summary are null only when browsing an article with no texts.
+ */
+export interface ArticleSearchResult {
+  id: string
+  entity_type: Article['entity_type']
+  entity_id: string
+  kind: string
+  published_at: string | null
+  language: string | null
+  title: string | null
+  summary: string | null
+  preview: PreviewSegment[]
+}

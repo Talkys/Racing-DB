@@ -6,13 +6,13 @@ import { dash, formatEnum } from '../lib/format.ts'
 // car.html?id=<car id>
 
 async function load(id: string): Promise<void> {
-  const car = await get('car', id)
+  const car = await get('cars', id)
   if (!car) throw new Error(`Car with ID '${id}' does not exist.`)
 
   const [category, team, engine, chassis, articles] = await Promise.all([
     get('categories', car.category_id),
-    get('team', car.team_id),
-    get('engine', car.engine_id),
+    get('teams', car.team_id),
+    get('engines', car.engine_id),
     get('chassis', car.chassis_id),
     entityArticles('car', car.id),
   ])
@@ -34,7 +34,7 @@ async function load(id: string): Promise<void> {
     engineConfiguration: dash(engine?.configuration),
     engineDisplacement: dash(engine?.displacement_cc),
     engineCylinders: dash(engine?.cylinders),
-    engineAspiration: engine ? formatEnum(engine.aspiration) : '—',
+    engineAspiration: engine ? formatEnum(engine.aspiration) : '-',
     enginePower: dash(engine?.power_kw),
 
     chassisName: chassis ? `${chassis.manufacturer} ${chassis.name}` : car.chassis_id,

@@ -9,12 +9,6 @@ export { dash } from './format.ts'
 //
 // URL params: col, op, q (filter) · sort, dir (ordering) · page.
 
-/** Related names are resolved from the first page of the related list; the API has no get-by-id. */
-export async function lookup<P extends EntityPath>(path: P): Promise<Map<string, EntityMap[P]>> {
-  const { items } = await search(path)
-  return new Map(items.map((item) => [(item as { id: string }).id, item]))
-}
-
 export interface SearchPageConfig<P extends EntityPath> {
   path: P
   rows(items: EntityMap[P][]): Fields[] | Promise<Fields[]>
@@ -74,7 +68,7 @@ export async function initSearchPage<P extends EntityPath>(config: SearchPageCon
     result = await search(config.path, query)
   } catch (err) {
     const box = $('[data-error]')
-    box.textContent = err instanceof ApiError ? `The server rejected this search: ${err.message}` : String(err)
+    box.textContent = err instanceof ApiError && err.status === 400 ? `The server rejected this search: ${err.message}` : err instanceof Error ? err.message : String(err)
     box.hidden = false
     return
   }

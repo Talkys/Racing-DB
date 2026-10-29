@@ -1,4 +1,4 @@
-import type { EntityMap, EntityPath } from './types.ts'
+import type { ArticleSearchResult, EntityMap, EntityPath } from './types.ts'
 
 const BASE_URL = '/api/1'
 const TIMEOUT_MS = 3000
@@ -6,10 +6,10 @@ const TIMEOUT_MS = 3000
 /** The back end returns pageSize + 1 rows; the extra row only signals that another page exists. */
 export const PAGE_SIZE = 25
 
-/** Set VITE_API_MOCK=true to skip the network entirely and always use mock data. */
-const FORCE_MOCK = import.meta.env.VITE_API_MOCK === 'true'
+/** Set VITE_API_MOCK=true to skip the network entirely and use the in-memory mock. There is no automatic fallback. */
+export const USE_MOCK = import.meta.env.VITE_API_MOCK === 'true'
 
-/** The back end answered, but with an error (e.g. 500 for an invalid filter). Never masked by mock data. */
+/** Every failed request: the back end's own errors (400, 404, 500) and network failures (status 0). */
 export class ApiError extends Error {
   status: number
 
@@ -21,7 +21,7 @@ export class ApiError extends Error {
 
 export interface Query {
   page?: number
-  /** `column,operator,value`, e.g. `language,eq,en` (operators: eq neq gt gte lt lte ilike). */
+  /** `column,operator,value`, e.g. `language,eq,en` (operators: eq neq gt gte lt lte ilike in; `in` values are `|` separated). */
   filter?: string
   /** `column,direction`, e.g. `race_date,desc`. */
   sort?: string
@@ -32,9 +32,8 @@ export interface Page<T> {
   hasNext: boolean
 }
 
-function toPage<T>(rows: T[] | null): Page<T> {
-  const all = rows ?? [] // Go encodes an empty result as `null`
-  return { items: all.slice(0, PAGE_SIZE), hasNext: all.length > PAGE_SIZE }
+function toPage<T>(rows: T[]): Page<T> {
+  return { items: rows.slice(0, PAGE_SIZE), hasNext: rows.length > PAGE_SIZE }
 }
 
 function buildUrl(path: EntityPath, query: Query): string {
@@ -46,51 +45,74 @@ function buildUrl(path: EntityPath, query: Query): string {
   return `${BASE_URL}/${path}${qs ? `?${qs}` : ''}`
 }
 
-/**
- * GET /api/1/<path>. If the back end is unreachable, falls back to the in-memory
- * mock so the front end can be developed in isolation. Errors the back end
- * reports itself are thrown as ApiError instead.
- */
-export async function search<P extends EntityPath>(
-  path: P,
-  query: Query = {},
-): Promise<Page<EntityMap[P]>> {
-  if (!FORCE_MOCK) {
-    try {
-      const res = await fetch(buildUrl(path, query), { signal: AbortSignal.timeout(TIMEOUT_MS) })
-      if (res.ok) return toPage<EntityMap[P]>(await res.json())
-      const body = (await res.text()).trim()
-      // The Vite dev proxy answers an unreachable target with a bodiless 5xx; Go's http.Error always has a body.
-      if (body) throw new ApiError(res.status, body)
-      console.warn(`[api] ${path} unreachable (${res.status}), using mock data`)
-    } catch (err) {
-      if (err instanceof ApiError) throw err
-      console.warn(`[api] ${path} unreachable, using mock data`, err)
-    }
+/** Error bodies are `{"status": 400, "error": "..."}`; anything else (e.g. a proxy page) falls back to the status text. */
+async function errorFrom(res: Response): Promise<ApiError> {
+  const body = await res.json().catch(() => null)
+  const message = typeof body?.error === 'string' ? body.error : `${res.status} ${res.statusText || 'request failed'}`
+  return new ApiError(res.status, message)
+}
+
+async function request(url: string): Promise<Response> {
+  try {
+    return await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) })
+  } catch (err) {
+    throw new ApiError(0, `The server could not be reached (${err instanceof Error ? err.message : String(err)}).`)
   }
-  const { mockSearch } = await import('./mock.ts')
-  return toPage(mockSearch(path, query))
+}
+
+/** GET /api/1/<path>. */
+export async function search<P extends EntityPath>(path: P, query: Query = {}): Promise<Page<EntityMap[P]>> {
+  if (USE_MOCK) {
+    const { mockSearch } = await import('./mock.ts')
+    return toPage(mockSearch(path, query))
+  }
+  const res = await request(buildUrl(path, query))
+  if (!res.ok) throw await errorFrom(res)
+  return toPage<EntityMap[P]>(await res.json())
+}
+
+/** GET /api/1/<path>/<id>. Resolves to null when the entity does not exist. */
+export async function get<P extends EntityPath>(path: P, id: string): Promise<EntityMap[P] | null> {
+  if (USE_MOCK) {
+    const { mockGet } = await import('./mock.ts')
+    return mockGet(path, id)
+  }
+  const res = await request(`${BASE_URL}/${path}/${encodeURIComponent(id)}`)
+  if (res.status === 404) return null
+  if (!res.ok) throw await errorFrom(res)
+  return (await res.json()) as EntityMap[P]
 }
 
 /**
- * GET /api/1/<path>/<id>. Resolves to null when the entity does not exist.
- * (Not implemented by the back end yet: until it is, the mock answers when the route is missing.)
+ * Fetches the given ids of one entity in a single request (`id,in,a|b|c`), keyed by id.
+ * Missing ids are simply absent from the map. Meant for the related rows of one page, so at most 100 ids.
  */
-export async function get<P extends EntityPath>(path: P, id: string): Promise<EntityMap[P] | null> {
-  if (!FORCE_MOCK) {
-    try {
-      const res = await fetch(`${BASE_URL}/${path}/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(TIMEOUT_MS) })
-      if (res.ok) return (await res.json()) as EntityMap[P]
-      const body = (await res.text()).trim()
-      // Go's mux answers an unregistered route with "404 page not found"; a real "no such entity" 404 is the back end's own.
-      if (res.status === 404 && body !== '404 page not found') return null
-      if (body) throw new ApiError(res.status, body)
-      console.warn(`[api] ${path}/${id} unreachable (${res.status}), using mock data`)
-    } catch (err) {
-      if (err instanceof ApiError) throw err
-      console.warn(`[api] ${path}/${id} unreachable, using mock data`, err)
-    }
+export async function getMany<P extends EntityPath>(path: P, ids: (string | null | undefined)[]): Promise<Map<string, EntityMap[P]>> {
+  const unique = [...new Set(ids.filter((id): id is string => !!id))]
+  if (unique.length === 0) return new Map()
+  const rows: EntityMap[P][] = []
+  // Pages hold PAGE_SIZE rows, so a long id list may need more than one.
+  for (let page = 1; ; page++) {
+    const result = await search(path, { filter: `id,in,${unique.join('|')}`, page })
+    rows.push(...result.items)
+    if (!result.hasNext) break
   }
-  const { mockGet } = await import('./mock.ts')
-  return mockGet(path, id)
+  return new Map(rows.map((row) => [(row as { id: string }).id, row]))
+}
+
+/**
+ * GET /api/1/articles/search. Whole-word search over article texts; an empty `q` lists every article
+ * newest first. `lang` is the preferred text language.
+ */
+export async function searchArticles(q: string, lang: string, page = 1): Promise<Page<ArticleSearchResult>> {
+  if (USE_MOCK) {
+    const { mockSearchArticles } = await import('./mock.ts')
+    return toPage(mockSearchArticles(q, lang, page))
+  }
+  const params = new URLSearchParams({ lang })
+  if (q) params.set('q', q)
+  if (page > 1) params.set('page', String(page))
+  const res = await request(`${BASE_URL}/articles/search?${params}`)
+  if (!res.ok) throw await errorFrom(res)
+  return toPage<ArticleSearchResult>(await res.json())
 }

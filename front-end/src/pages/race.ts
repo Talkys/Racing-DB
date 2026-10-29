@@ -8,7 +8,7 @@ import { dash, driverName, formatDate } from '../lib/format.ts'
 // race.html?id=<race id>
 
 async function load(id: string): Promise<void> {
-  const race = await get('race', id)
+  const race = await get('races', id)
   if (!race) throw new Error(`Race with ID '${id}' does not exist.`)
 
   const payloadDriverIds = isF1Race(race)
@@ -21,7 +21,7 @@ async function load(id: string): Promise<void> {
 
   const [category, circuit, drivers, articles] = await Promise.all([
     get('categories', race.category_id),
-    get('circuit', race.circuit_id),
+    get('circuits', race.circuit_id),
     loadDrivers([race.winner_id, ...payloadDriverIds]),
     entityArticles('race', race.id),
   ])
@@ -38,7 +38,7 @@ async function load(id: string): Promise<void> {
     round: String(race.round),
     category: category?.name ?? race.category_id,
     categoryHref: `races.html?col=category_id&op=eq&q=${encodeURIComponent(race.category_id)}`,
-    winner: winner ? driverName(winner) : race.winner_id ?? '—',
+    winner: winner ? driverName(winner) : race.winner_id ?? '-',
     circuitName: dash(circuit?.name),
     circuitLocation: dash(circuit?.location),
     circuitCountry: dash(circuit?.country),

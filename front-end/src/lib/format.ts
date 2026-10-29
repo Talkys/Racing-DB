@@ -1,5 +1,5 @@
 /** Null, undefined and empty values render as an em dash. */
-export const dash = (value: string | number | null | undefined) => (value == null || value === '' ? '—' : String(value))
+export const dash = (value: string | number | null | undefined) => (value == null || value === '' ? '-' : String(value))
 
 /** `2026-05-24` or `2026-05-24T12:00:00Z` -> `2026-05-24`. */
 export const formatDate = (iso: string | null | undefined) => dash(iso?.slice(0, 10))
@@ -18,3 +18,7 @@ export const articleHref = (articleId: string, lang?: string) =>
 export const raceHref = (raceId: string) => `race.html?id=${encodeURIComponent(raceId)}`
 
 export const carHref = (carId: string) => `car.html?id=${encodeURIComponent(carId)}`
+
+/** Detail page of an article's linked entity, for the types that have one. */
+export const entityHref = (entityType: string, entityId: string): string | undefined =>
+  entityType === 'race' ? raceHref(entityId) : entityType === 'car' ? carHref(entityId) : undefined

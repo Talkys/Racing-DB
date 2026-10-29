@@ -3,7 +3,9 @@ import type { EntityMap, EntityPath } from './types.ts'
 // Stand-in data in the Go back end's JSON shape. Categories come from ../init.sql; everything else is the
 // spec's seed (spec5.md §8.2), which covers every case the UI must handle: the three race payload types,
 // a race-less winner, nullable entity fields, multi-language articles, a draft and an article with no English text.
-// One extra driver article (a5) feeds the home page's featured box.
+// Additions beyond the spec: a driver article (a5) for the home page's featured box, a future-dated article (a6)
+// that must stay hidden, and enough extra drivers to need a second page (25 rows per page).
+// ../../../seed.sql is generated from this file, so both stay identical.
 
 const created = '2026-01-01T00:00:00Z'
 
@@ -28,7 +30,19 @@ const TEAM = [1, 2, 3].map((n) => seq(71, n))
 const ENGINE = [1, 2, 3].map((n) => seq(72, n))
 const CHASSIS = [1, 2, 3].map((n) => seq(73, n))
 const CAR = [1, 2, 3].map((n) => seq(74, n))
-const ARTICLE = [1, 2, 3, 4, 5].map((n) => seq(75, n))
+const ARTICLE = [1, 2, 3, 4, 5, 6].map((n) => seq(75, n))
+
+const MORE_DRIVERS = [
+  ['Lewis', 'Hamilton', 'HAM', 'British'], ['Charles', 'Leclerc', 'LEC', 'Monegasque'], ['Lando', 'Norris', 'NOR', 'British'],
+  ['Oscar', 'Piastri', 'PIA', 'Australian'], ['George', 'Russell', 'RUS', 'British'], ['Kimi', 'Antonelli', 'ANT', 'Italian'],
+  ['Fernando', 'Alonso', 'ALO', 'Spanish'], ['Lance', 'Stroll', 'STR', 'Canadian'], ['Pierre', 'Gasly', 'GAS', 'French'],
+  ['Esteban', 'Ocon', 'OCO', 'French'], ['Alexander', 'Albon', 'ALB', 'Thai'], ['Carlos', 'Sainz', 'SAI', 'Spanish'],
+  ['Nico', 'Hulkenberg', 'HUL', 'German'], ['Gabriel', 'Bortoleto', 'BOR', 'Brazilian'], ['Yuki', 'Tsunoda', 'TSU', 'Japanese'],
+  ['Liam', 'Lawson', 'LAW', 'New Zealander'], ['Isack', 'Hadjar', 'HAD', 'French'], ['Oliver', 'Bearman', 'BEA', 'British'],
+  ['Franco', 'Colapinto', 'COL', 'Argentine'], ['Marc', 'Marquez', 'MAR', 'Spanish'], ['Jorge', 'Martin', 'MRT', 'Spanish'],
+  ['Pedro', 'Acosta', 'ACO', 'Spanish'], ['Enea', 'Bastianini', 'BAS', 'Italian'], ['Fabio', 'Quartararo', 'QUA', 'French'],
+  ['Kamui', 'Kobayashi', 'KOB', 'Japanese'], ['Sebastien', 'Buemi', 'BUE', 'Swiss'],
+]
 
 const text = (n: number, article: number, language: string, title: string, summary: string | null, body_md: string, at: string) => ({
   id: seq(76, n), article_id: ARTICLE[article - 1], language, title, summary, body_md, created_at: at, updated_at: at,
@@ -49,18 +63,19 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
     { id: 'superbike', name: 'World Superbike (WorldSBK)', description: 'Production-based motorcycle road racing championship featuring modified street bikes.', is_active: true },
     { id: 'dtm', name: 'Deutsche Tourenwagen Masters', description: 'Historic German touring car series operating under GT3 specification rules.', is_active: true },
   ],
-  circuit: [
+  circuits: [
     { id: CIRCUIT.monaco, name: 'Circuit de Monaco', location: 'Monte Carlo', country: 'Monaco', length_km: 3.337, created_at: created },
     { id: CIRCUIT.mugello, name: 'Autodromo del Mugello', location: 'Scarperia e San Piero', country: 'Italy', length_km: 5.245, created_at: created },
     { id: CIRCUIT.sarthe, name: 'Circuit de la Sarthe', location: 'Le Mans', country: 'France', length_km: 13.626, created_at: created },
   ],
-  driver: [
+  drivers: [
     { id: DRIVER.ver, first_name: 'Max', last_name: 'Verstappen', code: 'VER', nationality: 'Dutch', created_at: created },
     { id: DRIVER.bag, first_name: 'Francesco', last_name: 'Bagnaia', code: 'BAG', nationality: 'Italian', created_at: created },
     { id: DRIVER.har, first_name: 'Brendon', last_name: 'Hartley', code: 'HAR', nationality: 'New Zealander', created_at: created },
     { id: DRIVER.bac, first_name: 'Klaus', last_name: 'Bachler', code: 'BAC', nationality: 'Austrian', created_at: created },
+    ...MORE_DRIVERS.map(([first_name, last_name, code, nationality], i) => ({ id: seq(70, i + 1), first_name, last_name, code, nationality, created_at: created })),
   ],
-  race: [
+  races: [
     {
       id: RACE.monaco, category_id: 'f1', circuit_id: CIRCUIT.monaco, winner_id: DRIVER.ver,
       name: 'Monaco Grand Prix', season: 2026, round: 8, race_date: '2026-05-24T00:00:00Z',
@@ -95,12 +110,12 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
       created_at: created,
     },
   ],
-  team: [
+  teams: [
     { id: TEAM[0], name: 'Oracle Red Bull Racing', short_name: 'Red Bull', country: 'United Kingdom', founded_year: 2005, created_at: created },
     { id: TEAM[1], name: 'Ducati Lenovo Team', short_name: 'Ducati', country: 'Italy', founded_year: null, created_at: created },
     { id: TEAM[2], name: 'Toyota Gazoo Racing', short_name: 'Toyota', country: 'Japan', founded_year: 2007, created_at: created },
   ],
-  engine: [
+  engines: [
     { id: ENGINE[0], manufacturer: 'Red Bull Ford', name: 'DM01', configuration: 'V6', displacement_cc: 1600, cylinders: 6, aspiration: 'HYBRID_TURBO', power_kw: 750.0, created_at: created },
     { id: ENGINE[1], manufacturer: 'Ducati', name: 'Desmosedici GP', configuration: 'V4', displacement_cc: 1000, cylinders: 4, aspiration: 'NATURALLY_ASPIRATED', power_kw: null, created_at: created },
     { id: ENGINE[2], manufacturer: 'Toyota', name: 'V35A', configuration: 'V6', displacement_cc: 3400, cylinders: 6, aspiration: 'TURBOCHARGED', power_kw: 520.0, created_at: created },
@@ -110,7 +125,7 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
     { id: CHASSIS[1], manufacturer: 'Ducati', name: 'Desmosedici frame', material: 'Aluminium', wheelbase_mm: null, weight_kg: null, created_at: created },
     { id: CHASSIS[2], manufacturer: 'Toyota', name: 'GR010 monocoque', material: 'Carbon fibre monocoque', wheelbase_mm: null, weight_kg: 1030.0, created_at: created },
   ],
-  car: [
+  cars: [
     {
       id: CAR[0], category_id: 'f1', team_id: TEAM[0], engine_id: ENGINE[0], chassis_id: CHASSIS[0], name: 'RB22', season: 2026,
       parts: {
@@ -145,14 +160,15 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
       created_at: created,
     },
   ],
-  article: [
+  articles: [
     { id: ARTICLE[0], entity_type: 'race', entity_id: RACE.monaco, kind: 'report', published_at: '2026-05-25T12:00:00Z', created_at: created },
     { id: ARTICLE[1], entity_type: 'category', entity_id: 'f1', kind: 'overview', published_at: '2026-01-02T00:00:00Z', created_at: created },
     { id: ARTICLE[2], entity_type: 'car', entity_id: CAR[0], kind: 'technical', published_at: null, created_at: created },
     { id: ARTICLE[3], entity_type: 'team', entity_id: TEAM[0], kind: 'history', published_at: '2026-02-01T00:00:00Z', created_at: created },
     { id: ARTICLE[4], entity_type: 'driver', entity_id: DRIVER.ver, kind: 'overview', published_at: '2026-03-01T00:00:00Z', created_at: created },
+    { id: ARTICLE[5], entity_type: 'driver', entity_id: DRIVER.bag, kind: 'preview', published_at: '2099-01-01T00:00:00Z', created_at: created },
   ],
-  'article-text': [
+  'article-texts': [
     text(1, 1, 'en', 'Verstappen masters Monaco', 'A controlled drive from pole.',
       '# Verstappen masters Monaco\n\nA **controlled** drive from pole, with a single pit stop on lap 30.\n\n* Fastest lap: 1:14.123\n* Safety cars: 1\n',
       '2026-05-25T12:00:00Z'),
@@ -166,5 +182,6 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
     text(5, 4, 'pt', 'A história da equipe', 'Uma breve história.', '# História\n\nTexto disponível somente em português.\n', '2026-02-01T00:00:00Z'),
     text(6, 5, 'en', 'Max Verstappen', 'Four-time world champion and Red Bull team leader.',
       '# Max Verstappen\n\nDutch driver, champion from 2021 to 2024.\n', '2026-03-01T00:00:00Z'),
+    text(7, 6, 'en', 'Bagnaia season preview (scheduled)', null, 'Future-dated. Must never be served.', '2026-03-01T00:00:00Z'),
   ],
 }

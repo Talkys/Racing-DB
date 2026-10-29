@@ -104,6 +104,13 @@
     @apply mb-1.5 border border-edge bg-panel-dark p-1.5;
   }
 
+  .search-result {
+    @apply mb-1.5 border-b border-dotted border-edge pb-1.5;
+  }
+  .search-result mark {
+    @apply bg-gold px-px font-bold text-black;
+  }
+
   .field {
     @apply bg-white p-0.5 font-ui text-[11px] text-black;
     border: 2px inset #999;
