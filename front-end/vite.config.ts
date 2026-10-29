@@ -24,7 +24,7 @@ export default defineConfig({
     }
   ],
   server: {
-    // Back end listens on :5000. If it is down, src/api/client.ts falls back to mock data.
+    // Back end listens on :5000. To work without it, run with VITE_API_MOCK=true (see src/api/client.ts).
     proxy: { '/api': process.env.VITE_API_TARGET ?? 'http://localhost:5000' },
   },
   build: {
