@@ -2,40 +2,33 @@ package category
 
 import (
 	"backend/modules/database"
-	"backend/utils/constants"
+	"backend/utils/apperror"
 	"backend/utils/queries"
 	"context"
+	"database/sql"
+	"errors"
 )
 
 var CategorySearchConfig = queries.EntitySearchConfig{
-	PageSize:       25,
-	DefaultSortCol: "id",
-	DefaultSortDir: "ASC",
+	PageSize:     25,
+	DefaultOrder: "name ASC, id ASC",
 	AllowedFilters: map[string]queries.AllowedFilter{
-		"name": {
-			DBColumn: "name",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"description": {
-			DBColumn: "description",
-			AllowedOps: map[string]string{
-				constants.Contains: "ilike",
-			},
-		},
-		"is_active": {
-			DBColumn: "is_active",
-			AllowedOps: map[string]string{
-				constants.Equal: "=",
-			},
-		},
+		"id":          {DBColumn: "id", Kind: queries.KindText, AllowedOps: queries.IDOps},
+		"name":        queries.TextFilter("name"),
+		"description": queries.TextFilter("description"),
+		"is_active":   queries.BoolFilter("is_active"),
 	},
 	AllowedSorts: map[string]string{
 		"name": "name",
 	},
+}
+
+var categoryColumns = []string{"id", "name", "description", "is_active"}
+
+func scanCategory(row database.Scanner) (Category, error) {
+	var x Category
+	err := row.Scan(&x.ID, &x.Name, &x.Description, &x.Is_active)
+	return x, err
 }
 
 type CategoryRepository struct {
@@ -47,26 +40,42 @@ func NewCategoryRepository() *CategoryRepository {
 }
 
 func (r *CategoryRepository) SearchCategories(ctx context.Context, sc queries.SearchCriteria) ([]Category, error) {
-	cols := []string{"id", "name", "description", "is_active"}
-
-	rows, err := database.PerformSearch(ctx, sc, cols, "categories", r.cfg)
+	rows, err := database.PerformSearch(ctx, sc, categoryColumns, "categories", r.cfg)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	var categories []Category
+	results := []Category{}
 
 	for rows.Next() {
-		var c Category
-		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.Is_active); err != nil {
+		x, err := scanCategory(rows)
+		if err != nil {
 			return nil, err
 		}
-		categories = append(categories, c)
+		results = append(results, x)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return categories, nil
+	return results, nil
+}
+
+func (r *CategoryRepository) GetCategory(ctx context.Context, id string) (*Category, error) {
+	row, err := database.PerformGet(ctx, id, categoryColumns, "categories", r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	x, err := scanCategory(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, apperror.NotFound("category '%s' not found", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &x, nil
 }

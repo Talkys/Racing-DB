@@ -14,6 +14,6 @@ type Car struct {
 	ChassisID  uuid.UUID       `json:"chassis_id"`
 	Name       string          `json:"name"`
 	Season     int             `json:"season"`
-	Parts      json.RawMessage `json:"parts"`
+	Parts      json.RawMessage `json:"parts" swaggertype:"object"`
 	CreatedAt  time.Time       `json:"created_at"`
 }

@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type ChassisService struct {
@@ -19,18 +21,14 @@ func NewChassisService(db *sql.DB) *ChassisService {
 	}
 }
 
-func (s *ChassisService) SearchChassiss(ctx context.Context, sc queries.SearchCriteria) ([]Chassis, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+func (s *ChassisService) SearchChassis(ctx context.Context, sc queries.SearchCriteria) ([]Chassis, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Chassis, error) {
+		return s.core.SearchChassis(ctx, sc)
+	})
+}
 
-	results, err := s.core.SearchChassiss(ctxTx, sc)
-	if err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return results, nil
+func (s *ChassisService) GetChassis(ctx context.Context, id uuid.UUID) (*Chassis, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Chassis, error) {
+		return s.core.GetChassis(ctx, id)
+	})
 }

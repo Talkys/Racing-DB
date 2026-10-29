@@ -20,18 +20,13 @@ func NewCategoryService(db *sql.DB) *CategoryService {
 }
 
 func (s *CategoryService) SearchCategories(ctx context.Context, sc queries.SearchCriteria) ([]Category, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Category, error) {
+		return s.core.SearchCategories(ctx, sc)
+	})
+}
 
-	var categories []Category
-
-	if categories, err = s.core.SearchCategories(ctxTx, sc); err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return categories, nil
+func (s *CategoryService) GetCategory(ctx context.Context, id string) (*Category, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Category, error) {
+		return s.core.GetCategory(ctx, id)
+	})
 }

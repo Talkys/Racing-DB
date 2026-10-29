@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type EngineService struct {
@@ -20,17 +22,13 @@ func NewEngineService(db *sql.DB) *EngineService {
 }
 
 func (s *EngineService) SearchEngines(ctx context.Context, sc queries.SearchCriteria) ([]Engine, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Engine, error) {
+		return s.core.SearchEngines(ctx, sc)
+	})
+}
 
-	results, err := s.core.SearchEngines(ctxTx, sc)
-	if err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return results, nil
+func (s *EngineService) GetEngine(ctx context.Context, id uuid.UUID) (*Engine, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Engine, error) {
+		return s.core.GetEngine(ctx, id)
+	})
 }

@@ -1,37 +1,40 @@
 package articletext
 
 import (
+	"backend/internal/article"
 	"backend/modules/database"
-	"backend/utils/constants"
+	"backend/utils/apperror"
 	"backend/utils/queries"
 	"context"
+	"database/sql"
+	"errors"
+
+	"github.com/google/uuid"
 )
 
+// Texts of hidden (draft or future-dated) articles are hidden too.
 var ArticleTextSearchConfig = queries.EntitySearchConfig{
-	PageSize:       25,
-	DefaultSortCol: "id",
-	DefaultSortDir: "ASC",
+	BaseCondition: "article_id IN (SELECT id FROM articles WHERE " + article.VisibleCondition + ")",
+	PageSize:      25,
+	DefaultOrder:  "language ASC, id ASC",
 	AllowedFilters: map[string]queries.AllowedFilter{
-		"language": {
-			DBColumn: "language",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"title": {
-			DBColumn: "title",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
+		"id":         queries.UUIDFilter("id"),
+		"article_id": queries.UUIDFilter("article_id"),
+		"language":   queries.TextFilter("language"),
+		"title":      queries.TextFilter("title"),
 	},
 	AllowedSorts: map[string]string{
-		"title": "title",
+		"title":    "title",
+		"language": "language",
 	},
+}
+
+var articleTextColumns = []string{"id", "article_id", "language", "title", "summary", "body_md", "created_at", "updated_at"}
+
+func scanArticleText(row database.Scanner) (ArticleText, error) {
+	var x ArticleText
+	err := row.Scan(&x.ID, &x.ArticleID, &x.Language, &x.Title, &x.Summary, &x.BodyMd, &x.CreatedAt, &x.UpdatedAt)
+	return x, err
 }
 
 type ArticleTextRepository struct {
@@ -43,19 +46,17 @@ func NewArticleTextRepository() *ArticleTextRepository {
 }
 
 func (r *ArticleTextRepository) SearchArticleTexts(ctx context.Context, sc queries.SearchCriteria) ([]ArticleText, error) {
-	cols := []string{"id", "article_id", "language", "title", "summary", "body_md", "created_at", "updated_at"}
-
-	rows, err := database.PerformSearch(ctx, sc, cols, "article_texts", r.cfg)
+	rows, err := database.PerformSearch(ctx, sc, articleTextColumns, "article_texts", r.cfg)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var results []ArticleText
+	results := []ArticleText{}
 
 	for rows.Next() {
-		var x ArticleText
-		if err := rows.Scan(&x.ID, &x.ArticleID, &x.Language, &x.Title, &x.Summary, &x.BodyMd, &x.CreatedAt, &x.UpdatedAt); err != nil {
+		x, err := scanArticleText(rows)
+		if err != nil {
 			return nil, err
 		}
 		results = append(results, x)
@@ -66,4 +67,21 @@ func (r *ArticleTextRepository) SearchArticleTexts(ctx context.Context, sc queri
 	}
 
 	return results, nil
+}
+
+func (r *ArticleTextRepository) GetArticleText(ctx context.Context, id uuid.UUID) (*ArticleText, error) {
+	row, err := database.PerformGet(ctx, id, articleTextColumns, "article_texts", r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	x, err := scanArticleText(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, apperror.NotFound("article text '%s' not found", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &x, nil
 }

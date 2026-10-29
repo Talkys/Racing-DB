@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/internal/article"
+	"backend/internal/articlesearch"
 	"backend/internal/articletext"
 	"backend/internal/car"
 	"backend/internal/category"
@@ -13,10 +14,16 @@ import (
 	"backend/internal/team"
 	"backend/modules/betterlogger"
 	"backend/modules/database"
+	"backend/utils/constants"
+	"backend/utils/routes"
 	"net/http"
 	"os"
 )
 
+// @title RacingDB API
+// @version 1
+// @description Read-only racing database: categories, circuits, drivers, races, teams, engines, chassis, cars and articles.
+// @BasePath /api/1
 func main() {
 	err := betterlogger.Init("app.log")
 	if err != nil {
@@ -77,10 +84,19 @@ func main() {
 	articletextHandler := articletext.NewArticleTextHandler(db)
 	articletextHandler.RegisterRoutes(mux)
 
-	port := ":5000"
+	articlesearchHandler := articlesearch.NewArticleSearchHandler(db)
+	articlesearchHandler.RegisterRoutes(mux)
+
+	// Anything under the API prefix that no handler claimed gets a JSON 404 instead of the mux's plain text.
+	mux.HandleFunc(constants.BaseApiUrl_V1+"/", routes.NotFound)
+
+	port := ":" + os.Getenv("PORT")
+	if port == ":" {
+		port = ":5000"
+	}
 	log.Info("Starting server on port %s...", port)
 	if err := http.ListenAndServe(port, mux); err != nil {
-		log.Info("Server stopped: %v", err)
-		os.Exit(0)
+		log.Error("Server stopped: %v", err)
+		os.Exit(1)
 	}
 }

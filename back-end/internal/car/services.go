@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type CarService struct {
@@ -20,17 +22,13 @@ func NewCarService(db *sql.DB) *CarService {
 }
 
 func (s *CarService) SearchCars(ctx context.Context, sc queries.SearchCriteria) ([]Car, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Car, error) {
+		return s.core.SearchCars(ctx, sc)
+	})
+}
 
-	results, err := s.core.SearchCars(ctxTx, sc)
-	if err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return results, nil
+func (s *CarService) GetCar(ctx context.Context, id uuid.UUID) (*Car, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Car, error) {
+		return s.core.GetCar(ctx, id)
+	})
 }

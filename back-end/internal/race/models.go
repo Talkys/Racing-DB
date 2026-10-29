@@ -15,6 +15,6 @@ type Race struct {
 	Season     int             `json:"season"`
 	Round      int             `json:"round"`
 	RaceDate   time.Time       `json:"race_date"`
-	Payload    json.RawMessage `json:"payload"`
+	Payload    json.RawMessage `json:"payload" swaggertype:"object"`
 	CreatedAt  time.Time       `json:"created_at"`
 }

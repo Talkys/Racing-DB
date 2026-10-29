@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type RaceService struct {
@@ -20,17 +22,13 @@ func NewRaceService(db *sql.DB) *RaceService {
 }
 
 func (s *RaceService) SearchRaces(ctx context.Context, sc queries.SearchCriteria) ([]Race, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Race, error) {
+		return s.core.SearchRaces(ctx, sc)
+	})
+}
 
-	results, err := s.core.SearchRaces(ctxTx, sc)
-	if err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return results, nil
+func (s *RaceService) GetRace(ctx context.Context, id uuid.UUID) (*Race, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Race, error) {
+		return s.core.GetRace(ctx, id)
+	})
 }

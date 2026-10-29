@@ -2,54 +2,36 @@ package circuit
 
 import (
 	"backend/modules/database"
-	"backend/utils/constants"
+	"backend/utils/apperror"
 	"backend/utils/queries"
 	"context"
+	"database/sql"
+	"errors"
+
+	"github.com/google/uuid"
 )
 
 var CircuitSearchConfig = queries.EntitySearchConfig{
-	PageSize:       25,
-	DefaultSortCol: "id",
-	DefaultSortDir: "ASC",
+	PageSize:     25,
+	DefaultOrder: "name ASC, id ASC",
 	AllowedFilters: map[string]queries.AllowedFilter{
-		"name": {
-			DBColumn: "name",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"location": {
-			DBColumn: "location",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"country": {
-			DBColumn: "country",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"length_km": {
-			DBColumn: "length_km",
-			AllowedOps: map[string]string{
-				constants.Equal:        "=",
-				constants.Greater:      ">",
-				constants.GreaterEqual: ">=",
-				constants.Less:         "<",
-				constants.LessEqual:    "<=",
-			},
-		},
+		"id":        queries.UUIDFilter("id"),
+		"name":      queries.TextFilter("name"),
+		"location":  queries.TextFilter("location"),
+		"country":   queries.TextFilter("country"),
+		"length_km": queries.DecimalFilter("length_km"),
 	},
 	AllowedSorts: map[string]string{
 		"name": "name",
 	},
+}
+
+var circuitColumns = []string{"id", "name", "location", "country", "length_km", "created_at"}
+
+func scanCircuit(row database.Scanner) (Circuit, error) {
+	var x Circuit
+	err := row.Scan(&x.ID, &x.Name, &x.Location, &x.Country, &x.LengthKm, &x.CreatedAt)
+	return x, err
 }
 
 type CircuitRepository struct {
@@ -61,26 +43,42 @@ func NewCircuitRepository() *CircuitRepository {
 }
 
 func (r *CircuitRepository) SearchCircuits(ctx context.Context, sc queries.SearchCriteria) ([]Circuit, error) {
-	cols := []string{"id", "name", "location", "country", "length_km", "created_at"}
-
-	rows, err := database.PerformSearch(ctx, sc, cols, "circuits", r.cfg)
+	rows, err := database.PerformSearch(ctx, sc, circuitColumns, "circuits", r.cfg)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	var categories []Circuit
+	results := []Circuit{}
 
 	for rows.Next() {
-		var c Circuit
-		if err := rows.Scan(&c.ID, &c.Name, &c.Location, &c.Country, &c.LengthKm, &c.CreatedAt); err != nil {
+		x, err := scanCircuit(rows)
+		if err != nil {
 			return nil, err
 		}
-		categories = append(categories, c)
+		results = append(results, x)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return categories, nil
+	return results, nil
+}
+
+func (r *CircuitRepository) GetCircuit(ctx context.Context, id uuid.UUID) (*Circuit, error) {
+	row, err := database.PerformGet(ctx, id, circuitColumns, "circuits", r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	x, err := scanCircuit(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, apperror.NotFound("circuit '%s' not found", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &x, nil
 }

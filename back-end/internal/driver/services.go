@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type DriverService struct {
@@ -20,17 +22,13 @@ func NewDriverService(db *sql.DB) *DriverService {
 }
 
 func (s *DriverService) SearchDrivers(ctx context.Context, sc queries.SearchCriteria) ([]Driver, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Driver, error) {
+		return s.core.SearchDrivers(ctx, sc)
+	})
+}
 
-	results, err := s.core.SearchDrivers(ctxTx, sc)
-	if err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return results, nil
+func (s *DriverService) GetDriver(ctx context.Context, id uuid.UUID) (*Driver, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Driver, error) {
+		return s.core.GetDriver(ctx, id)
+	})
 }

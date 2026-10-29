@@ -2,44 +2,40 @@ package article
 
 import (
 	"backend/modules/database"
-	"backend/utils/constants"
+	"backend/utils/apperror"
 	"backend/utils/queries"
 	"context"
+	"database/sql"
+	"errors"
+
+	"github.com/google/uuid"
 )
 
+// VisibleCondition hides drafts (no published_at) and future-dated articles everywhere in the API.
+const VisibleCondition = "published_at IS NOT NULL AND published_at <= now()"
+
 var ArticleSearchConfig = queries.EntitySearchConfig{
-	PageSize:       25,
-	DefaultSortCol: "id",
-	DefaultSortDir: "ASC",
+	BaseCondition: VisibleCondition,
+	PageSize:      25,
+	DefaultOrder:  "published_at DESC, id ASC",
 	AllowedFilters: map[string]queries.AllowedFilter{
-		"entity_type": {
-			DBColumn: "entity_type",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"entity_id": {
-			DBColumn: "entity_id",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"kind": {
-			DBColumn: "kind",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
+		"id":          queries.UUIDFilter("id"),
+		"entity_type": queries.TextFilter("entity_type"),
+		"entity_id":   queries.TextFilter("entity_id"),
+		"kind":        queries.TextFilter("kind"),
 	},
 	AllowedSorts: map[string]string{
-		"created_at": "created_at",
+		"published_at": "published_at",
+		"created_at":   "created_at",
 	},
+}
+
+var articleColumns = []string{"id", "entity_type", "entity_id", "kind", "published_at", "created_at"}
+
+func scanArticle(row database.Scanner) (Article, error) {
+	var x Article
+	err := row.Scan(&x.ID, &x.EntityType, &x.EntityID, &x.Kind, &x.PublishedAt, &x.CreatedAt)
+	return x, err
 }
 
 type ArticleRepository struct {
@@ -51,19 +47,17 @@ func NewArticleRepository() *ArticleRepository {
 }
 
 func (r *ArticleRepository) SearchArticles(ctx context.Context, sc queries.SearchCriteria) ([]Article, error) {
-	cols := []string{"id", "entity_type", "entity_id", "kind", "published_at", "created_at"}
-
-	rows, err := database.PerformSearch(ctx, sc, cols, "articles", r.cfg)
+	rows, err := database.PerformSearch(ctx, sc, articleColumns, "articles", r.cfg)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var results []Article
+	results := []Article{}
 
 	for rows.Next() {
-		var x Article
-		if err := rows.Scan(&x.ID, &x.EntityType, &x.EntityID, &x.Kind, &x.PublishedAt, &x.CreatedAt); err != nil {
+		x, err := scanArticle(rows)
+		if err != nil {
 			return nil, err
 		}
 		results = append(results, x)
@@ -74,4 +68,21 @@ func (r *ArticleRepository) SearchArticles(ctx context.Context, sc queries.Searc
 	}
 
 	return results, nil
+}
+
+func (r *ArticleRepository) GetArticle(ctx context.Context, id uuid.UUID) (*Article, error) {
+	row, err := database.PerformGet(ctx, id, articleColumns, "articles", r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	x, err := scanArticle(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, apperror.NotFound("article '%s' not found", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &x, nil
 }

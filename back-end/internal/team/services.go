@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type TeamService struct {
@@ -20,17 +22,13 @@ func NewTeamService(db *sql.DB) *TeamService {
 }
 
 func (s *TeamService) SearchTeams(ctx context.Context, sc queries.SearchCriteria) ([]Team, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Team, error) {
+		return s.core.SearchTeams(ctx, sc)
+	})
+}
 
-	results, err := s.core.SearchTeams(ctxTx, sc)
-	if err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return results, nil
+func (s *TeamService) GetTeam(ctx context.Context, id uuid.UUID) (*Team, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Team, error) {
+		return s.core.GetTeam(ctx, id)
+	})
 }

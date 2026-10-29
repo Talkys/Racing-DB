@@ -2,82 +2,39 @@ package engine
 
 import (
 	"backend/modules/database"
-	"backend/utils/constants"
+	"backend/utils/apperror"
 	"backend/utils/queries"
 	"context"
+	"database/sql"
+	"errors"
+
+	"github.com/google/uuid"
 )
 
 var EngineSearchConfig = queries.EntitySearchConfig{
-	PageSize:       25,
-	DefaultSortCol: "id",
-	DefaultSortDir: "ASC",
+	PageSize:     25,
+	DefaultOrder: "manufacturer ASC, name ASC, id ASC",
 	AllowedFilters: map[string]queries.AllowedFilter{
-		"manufacturer": {
-			DBColumn: "manufacturer",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"name": {
-			DBColumn: "name",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"configuration": {
-			DBColumn: "configuration",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"displacement_cc": {
-			DBColumn: "displacement_cc",
-			AllowedOps: map[string]string{
-				constants.Equal:        "=",
-				constants.Greater:      ">",
-				constants.GreaterEqual: ">=",
-				constants.Less:         "<",
-				constants.LessEqual:    "<=",
-			},
-		},
-		"cylinders": {
-			DBColumn: "cylinders",
-			AllowedOps: map[string]string{
-				constants.Equal:        "=",
-				constants.Greater:      ">",
-				constants.GreaterEqual: ">=",
-				constants.Less:         "<",
-				constants.LessEqual:    "<=",
-			},
-		},
-		"aspiration": {
-			DBColumn: "aspiration",
-			AllowedOps: map[string]string{
-				constants.Equal:    "=",
-				constants.NotEqual: "<>",
-				constants.Contains: "ilike",
-			},
-		},
-		"power_kw": {
-			DBColumn: "power_kw",
-			AllowedOps: map[string]string{
-				constants.Equal:        "=",
-				constants.Greater:      ">",
-				constants.GreaterEqual: ">=",
-				constants.Less:         "<",
-				constants.LessEqual:    "<=",
-			},
-		},
+		"id":              queries.UUIDFilter("id"),
+		"manufacturer":    queries.TextFilter("manufacturer"),
+		"name":            queries.TextFilter("name"),
+		"configuration":   queries.TextFilter("configuration"),
+		"displacement_cc": queries.IntFilter("displacement_cc"),
+		"cylinders":       queries.IntFilter("cylinders"),
+		"aspiration":      queries.TextFilter("aspiration"),
+		"power_kw":        queries.DecimalFilter("power_kw"),
 	},
 	AllowedSorts: map[string]string{
 		"name": "name",
 	},
+}
+
+var engineColumns = []string{"id", "manufacturer", "name", "configuration", "displacement_cc", "cylinders", "aspiration", "power_kw", "created_at"}
+
+func scanEngine(row database.Scanner) (Engine, error) {
+	var x Engine
+	err := row.Scan(&x.ID, &x.Manufacturer, &x.Name, &x.Configuration, &x.DisplacementCC, &x.Cylinders, &x.Aspiration, &x.PowerKW, &x.CreatedAt)
+	return x, err
 }
 
 type EngineRepository struct {
@@ -89,19 +46,17 @@ func NewEngineRepository() *EngineRepository {
 }
 
 func (r *EngineRepository) SearchEngines(ctx context.Context, sc queries.SearchCriteria) ([]Engine, error) {
-	cols := []string{"id", "manufacturer", "name", "configuration", "displacement_cc", "cylinders", "aspiration", "power_kw", "created_at"}
-
-	rows, err := database.PerformSearch(ctx, sc, cols, "engines", r.cfg)
+	rows, err := database.PerformSearch(ctx, sc, engineColumns, "engines", r.cfg)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var results []Engine
+	results := []Engine{}
 
 	for rows.Next() {
-		var x Engine
-		if err := rows.Scan(&x.ID, &x.Manufacturer, &x.Name, &x.Configuration, &x.DisplacementCC, &x.Cylinders, &x.Aspiration, &x.PowerKW, &x.CreatedAt); err != nil {
+		x, err := scanEngine(rows)
+		if err != nil {
 			return nil, err
 		}
 		results = append(results, x)
@@ -112,4 +67,21 @@ func (r *EngineRepository) SearchEngines(ctx context.Context, sc queries.SearchC
 	}
 
 	return results, nil
+}
+
+func (r *EngineRepository) GetEngine(ctx context.Context, id uuid.UUID) (*Engine, error) {
+	row, err := database.PerformGet(ctx, id, engineColumns, "engines", r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	x, err := scanEngine(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, apperror.NotFound("engine '%s' not found", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &x, nil
 }

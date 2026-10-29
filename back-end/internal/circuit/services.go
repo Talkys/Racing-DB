@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type CircuitService struct {
@@ -20,18 +22,13 @@ func NewCircuitService(db *sql.DB) *CircuitService {
 }
 
 func (s *CircuitService) SearchCircuits(ctx context.Context, sc queries.SearchCriteria) ([]Circuit, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Circuit, error) {
+		return s.core.SearchCircuits(ctx, sc)
+	})
+}
 
-	var Circuits []Circuit
-
-	if Circuits, err = s.core.SearchCircuits(ctxTx, sc); err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return Circuits, nil
+func (s *CircuitService) GetCircuit(ctx context.Context, id uuid.UUID) (*Circuit, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Circuit, error) {
+		return s.core.GetCircuit(ctx, id)
+	})
 }

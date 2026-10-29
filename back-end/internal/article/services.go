@@ -5,6 +5,8 @@ import (
 	"backend/utils/queries"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type ArticleService struct {
@@ -20,17 +22,13 @@ func NewArticleService(db *sql.DB) *ArticleService {
 }
 
 func (s *ArticleService) SearchArticles(ctx context.Context, sc queries.SearchCriteria) ([]Article, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	ctxTx := database.InjectTx(ctx, tx)
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) ([]Article, error) {
+		return s.core.SearchArticles(ctx, sc)
+	})
+}
 
-	results, err := s.core.SearchArticles(ctxTx, sc)
-	if err != nil {
-		return nil, err
-	}
-	tx.Commit()
-	return results, nil
+func (s *ArticleService) GetArticle(ctx context.Context, id uuid.UUID) (*Article, error) {
+	return database.WithReadTx(ctx, s.db, func(ctx context.Context) (*Article, error) {
+		return s.core.GetArticle(ctx, id)
+	})
 }
