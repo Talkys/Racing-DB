@@ -120,6 +120,34 @@ CREATE TABLE articles (
 CREATE INDEX idx_articles_entity ON articles(entity_type, entity_id);
 CREATE INDEX idx_articles_published ON articles(published_at DESC, id ASC);
 
+-- Markdown -> plain text, for search and previews. Regex-based: good enough for snippets, not a full parser.
+CREATE FUNCTION markdown_to_text(md text) RETURNS text LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
+SELECT btrim(regexp_replace(
+  -- table pipes, emphasis, strike and code markers
+  regexp_replace(regexp_replace(regexp_replace(
+  -- line-level syntax: fences, headings, quotes, list markers, rules, table separators, link definitions
+  regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(
+  -- inline syntax: images, links, autolinks, HTML tags, and the preview highlight markers
+  regexp_replace(regexp_replace(regexp_replace(regexp_replace(
+    md,
+    '[]', '', 'g'),
+    '<(https?://[^>]+)>', '\1', 'g'),
+    '<[^>]+>', ' ', 'g'),
+    '!?\[([^\]]*)\](\([^)]*\)|\[[^\]]*\])', '\1', 'g'),
+    '^\s*```.*$', '', 'gn'),
+    '^\s{0,3}#{1,6}\s+', '', 'gn'),
+    '^\s{0,3}>\s?', '', 'gn'),
+    '^\s*([*+-]|\d+[.)])\s+', '', 'gn'),
+    '^\s*([-*_]\s*){3,}$', '', 'gn'),
+    '^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$', '', 'gn'),
+    '^\s{0,3}\[[^\]]+\]:\s+\S+.*$', '', 'gn'),
+  '[*~`|]+', ' ', 'g'),
+  -- underscores only as emphasis, so snake_case words survive
+  '(^|[^[:alnum:]])_+', '\1', 'g'),
+  '_+([^[:alnum:]]|$)', '\1', 'g'),
+  '\s+', ' ', 'g'))
+$$;
+
 CREATE TABLE article_texts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     article_id UUID NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
@@ -130,21 +158,20 @@ CREATE TABLE article_texts (
     body_md TEXT NOT NULL CHECK (length(body_md) <= 200000), -- Markdown source
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- Plain text of body_md, for search previews. Cleaning Markdown is slow on big bodies, so it is
+    -- done once per write instead of on every search.
+    body_text TEXT GENERATED ALWAYS AS (markdown_to_text(body_md)) STORED,
+    -- Full-text search over the plain text. 'simple' config: whole words, case-insensitive, no stemming.
+    -- Weights rank title matches above summary matches above body matches.
+    -- (A generated column cannot read another one, hence markdown_to_text again.)
+    search_vector TSVECTOR GENERATED ALWAYS AS (
+        setweight(to_tsvector('simple', title), 'A') ||
+        setweight(to_tsvector('simple', coalesce(summary, '')), 'B') ||
+        setweight(to_tsvector('simple', markdown_to_text(body_md)), 'C')
+    ) STORED,
     UNIQUE (article_id, language)
 );
 
--- # MOCK DATA ENTRIES # --
+CREATE INDEX idx_article_texts_search ON article_texts USING GIN (search_vector);
 
-INSERT INTO categories (id, name, description, is_active) VALUES
-  ('f1', 'Formula 1', 'The pinnacle of open-wheel single-seater motorsport, featuring hybrid power units and world-renowned constructors.', true),
-  ('motogp', 'MotoGP', 'The premier class of motorcycle road racing, showcasing high-performance 1000cc prototype bikes.', true),
-  ('wec', 'FIA World Endurance Championship', 'Multi-class sports car racing featuring Hypercars and GT cars battling in endurance events including the 24 Hours of Le Mans.', true),
-  ('indycar', 'IndyCar Series', 'North America premier open-wheel racing series featuring oval, road, and street circuit competition.', true),
-  ('wrc', 'World Rally Championship', 'The ultimate off-road competition, challenging drivers and co-drivers across gravel, snow, and asphalt stages worldwide.', true),
-  ('formula-e', 'Formula E', 'All-electric single-seater championship racing through street circuits in major global cities.', true),
-  ('nascar-cup', 'NASCAR Cup Series', 'The top racing series of stock car racing in North America, primarily contested on oval tracks.', true),
-  ('imsa', 'IMSA WeatherTech SportsCar Championship', 'Premier North American endurance and sports car racing series featuring GTP, LMP2, and GTD classes.', true),
-  ('f2', 'Formula 2', 'Official feeder series for Formula 1 featuring identical chassis and engine specifications to test driver skill.', true),
-  ('supercars', 'Repco Supercars Championship', 'Australia premier touring car racing series, featuring high-powered V8 race cars.', true),
-  ('superbike', 'World Superbike (WorldSBK)', 'Production-based motorcycle road racing championship featuring modified street bikes.', true),
-  ('dtm', 'Deutsche Tourenwagen Masters', 'Historic German touring car series operating under GT3 specification rules.', true)
+-- Data lives in seed.sql (generated from front-end/src/api/mock-data.ts; see front-end/scripts/gen-seed.ts).
