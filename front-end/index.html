@@ -14,7 +14,7 @@
     <header class="header">
         <div>
             <h1 class="logo-title">RaceDB<small>.org</small></h1>
-            <div class="logo-tagline">The Internet Motorsport Database — Since 1999</div>
+            <div class="logo-tagline">The Internet Motorsport Database - Since 1999</div>
         </div>
         <form action="#" class="m-0 text-right" data-header-search>
             <label for="q" class="search-label">Search Database:</label>
@@ -25,6 +25,7 @@
                 <option value="races.html" data-col="name">Grand Prix</option>
                 <option value="circuits.html" data-col="name">Circuits</option>
                 <option value="teams.html" data-col="name">Teams</option>
+                <option value="articles.html" data-col="title">Articles</option>
             </select>
             <button type="submit" class="btn">Go!</button>
         </form>
@@ -40,11 +41,13 @@
         <a href="cars.html">Cars</a>
         <a href="engines.html">Engines</a>
         <a href="chassis.html">Chassis</a>
+        <a href="articles.html">Articles</a>
     </nav>
 
     <div class="ticker-bar">
         <div class="ticker-text" data-field="ticker">Loading latest updates…</div>
     </div>
+    <p data-error hidden class="mx-2 my-1.5 text-flame"></p>
 
     <div class="layout">
 
@@ -131,7 +134,7 @@
             <div class="box-title">Random Quote</div>
             <div class="box-content">
                 <i class="text-[#ffffaa]">"If you no longer go for a gap that exists, you are no longer a racing driver."</i>
-                <div class="text-right">— <b>Ayrton Senna</b>, Adelaide 1990</div>
+                <div class="text-right">- <b>Ayrton Senna</b>, Adelaide 1990</div>
             </div>
 
             <div class="box-title">Affiliates / Badges</div>

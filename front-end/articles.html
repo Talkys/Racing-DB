@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - RaceDB.org</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body class="body-class">
+
+<div class="page">
+    <div class="checkered-bar"></div>
+
+    <header class="header">
+        <div>
+            <h1 class="logo-title"><a href="index.html" class="no-underline hover:no-underline">RaceDB<small>.org</small></a></h1>
+            <div class="logo-tagline">The Internet Motorsport Database - Since 1999</div>
+        </div>
+        <form action="#" class="m-0 text-right" data-header-search>
+            <label for="header-q" class="search-label">Search Database:</label>
+            <input type="text" id="header-q" name="q" size="14" class="field">
+            <select name="type" class="field">
+                <option value="drivers.html" data-col="last_name">Drivers</option>
+                <option value="cars.html" data-col="name">Cars</option>
+                <option value="races.html" data-col="name">Grand Prix</option>
+                <option value="circuits.html" data-col="name">Circuits</option>
+                <option value="teams.html" data-col="name">Teams</option>
+                <option value="articles.html" data-col="title" selected>Articles</option>
+            </select>
+            <button type="submit" class="btn">Go!</button>
+        </form>
+    </header>
+
+    <nav class="nav-bar">
+        <a href="index.html">Home</a>
+        <a href="categories.html">Categories</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="races.html">Races</a>
+        <a href="circuits.html">Circuits</a>
+        <a href="teams.html">Teams</a>
+        <a href="cars.html">Cars</a>
+        <a href="engines.html">Engines</a>
+        <a href="chassis.html">Chassis</a>
+        <a href="articles.html" aria-current="page">Articles</a>
+    </nav>
+
+    <div class="p-1.5">
+        <div class="box-title">Articles</div>
+        <div class="box-content">
+            <form method="GET" class="filter-form" data-article-search>
+                <label>Search articles:
+                    <input type="search" name="q" size="32" maxlength="200" class="field">
+                </label>
+                <button type="submit" class="btn">Search</button>
+                <a href="articles.html">Reset</a>
+            </form>
+            <p class="my-1 text-[10px] text-[#ccc]">Whole words only. Use "quotes" for a phrase, <b>or</b> between words for either one, and -word to exclude a word.</p>
+
+            <p class="my-1.5 font-bold" data-field="summary"></p>
+
+            <div data-section="results">
+                <template>
+                    <div class="search-result">
+                        <a href="#" class="font-bold" data-field="title" data-field-href="href"></a>
+                        <small>[<span data-field="language"></span>]</small>
+                        <div class="text-[10px] text-[#ccc]">
+                            <span data-field="kind"></span> &middot; about
+                            <a href="#" data-show-if="aboutHref" data-field="about" data-field-href="aboutHref"></a><span data-show-if="aboutPlain" data-field="aboutPlain"></span>
+                            &middot; <span data-field="published"></span>
+                        </div>
+                        <p class="my-0.5" data-preview></p>
+                    </div>
+                </template>
+            </div>
+
+            <p data-empty hidden class="my-1.5">No articles found.</p>
+            <p data-error hidden class="my-1.5 text-flame"></p>
+
+            <div class="pager">
+                <span><a data-prev hidden>&lt;&lt; Previous</a></span>
+                <span>Page <span data-page>1</span></span>
+                <span><a data-next hidden>Next &gt;&gt;</a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkered-bar"></div>
+
+    <footer class="footer">
+        &copy; 1999–2003 RaceDB Interactive Systems Ltd. All Rights Reserved.
+    </footer>
+
+</div>
+
+<script type="module" src="/src/lib/header.ts"></script>
+<script type="module" src="/src/pages/articles.ts"></script>
+</body>
+</html>
