@@ -1,4 +1,90 @@
+basePath: /api/1
 definitions:
+  article.Article:
+    properties:
+      created_at:
+        type: string
+      entity_id:
+        type: string
+      entity_type:
+        type: string
+      id:
+        type: string
+      kind:
+        type: string
+      published_at:
+        type: string
+    type: object
+  articlesearch.ArticleSearchResult:
+    properties:
+      entity_id:
+        type: string
+      entity_type:
+        type: string
+      id:
+        type: string
+      kind:
+        type: string
+      language:
+        type: string
+      preview:
+        items:
+          $ref: '#/definitions/articlesearch.PreviewSegment'
+        type: array
+      published_at:
+        type: string
+      summary:
+        type: string
+      title:
+        type: string
+    type: object
+  articlesearch.PreviewSegment:
+    properties:
+      match:
+        type: boolean
+      text:
+        type: string
+    type: object
+  articletext.ArticleText:
+    properties:
+      article_id:
+        type: string
+      body_md:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      language:
+        type: string
+      summary:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  car.Car:
+    properties:
+      category_id:
+        type: string
+      chassis_id:
+        type: string
+      created_at:
+        type: string
+      engine_id:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      parts:
+        type: object
+      season:
+        type: integer
+      team_id:
+        type: string
+    type: object
   category.Category:
     properties:
       description:
@@ -10,20 +96,389 @@ definitions:
       name:
         type: string
     type: object
+  chassis.Chassis:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      manufacturer:
+        type: string
+      material:
+        type: string
+      name:
+        type: string
+      weight_kg:
+        type: number
+      wheelbase_mm:
+        type: integer
+    type: object
+  circuit.Circuit:
+    properties:
+      country:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      length_km:
+        type: number
+      location:
+        type: string
+      name:
+        type: string
+    type: object
+  driver.Driver:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      nationality:
+        type: string
+    type: object
+  engine.Engine:
+    properties:
+      aspiration:
+        type: string
+      configuration:
+        type: string
+      created_at:
+        type: string
+      cylinders:
+        type: integer
+      displacement_cc:
+        type: integer
+      id:
+        type: string
+      manufacturer:
+        type: string
+      name:
+        type: string
+      power_kw:
+        type: number
+    type: object
+  race.Race:
+    properties:
+      category_id:
+        type: string
+      circuit_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      payload:
+        type: object
+      race_date:
+        type: string
+      round:
+        type: integer
+      season:
+        type: integer
+      winner_id:
+        type: string
+    type: object
+  routes.ErrorResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: integer
+    type: object
+  team.Team:
+    properties:
+      country:
+        type: string
+      created_at:
+        type: string
+      founded_year:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      short_name:
+        type: string
+    type: object
 info:
   contact: {}
+  description: 'Read-only racing database: categories, circuits, drivers, races, teams,
+    engines, chassis, cars and articles.'
+  title: RacingDB API
+  version: "1"
 paths:
+  /article-texts:
+    get:
+      description: 'Retrieve a page of article texts filtered and sorted by query
+        criteria. Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-article-texts
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. title,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching article texts
+          schema:
+            items:
+              $ref: '#/definitions/articletext.ArticleText'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search article texts
+      tags:
+      - article-texts
+  /article-texts/{id}:
+    get:
+      operationId: get-article-texts
+      parameters:
+      - description: ArticleText UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/articletext.ArticleText'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get an article text
+      tags:
+      - article-texts
+  /articles:
+    get:
+      description: 'Retrieve a page of articles filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-articles
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. published_at,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching articles
+          schema:
+            items:
+              $ref: '#/definitions/article.Article'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search articles
+      tags:
+      - articles
+  /articles/{id}:
+    get:
+      operationId: get-articles
+      parameters:
+      - description: Article UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/article.Article'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get an article
+      tags:
+      - articles
+  /articles/search:
+    get:
+      description: 'Full-text search over article titles, summaries and bodies: whole
+        words, case-insensitive, no stemming. Supports "quoted phrases", or, and -exclusion.
+        One result per article, using the text in `lang` when it qualifies. Without
+        `q`, lists every article newest first. Returns up to 26 rows: the 26th only
+        signals that a next page exists.'
+      operationId: search-articles-text
+      parameters:
+      - description: Search words (max 200 characters); omit to browse
+        in: query
+        name: q
+        type: string
+      - description: Preferred text language, e.g. pt-br
+        in: query
+        name: lang
+        type: string
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/articlesearch.ArticleSearchResult'
+            type: array
+        "400":
+          description: Invalid q, lang or page
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search articles
+      tags:
+      - articles
+  /cars:
+    get:
+      description: 'Retrieve a page of cars filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-cars
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. name,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching cars
+          schema:
+            items:
+              $ref: '#/definitions/car.Car'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search cars
+      tags:
+      - cars
+  /cars/{id}:
+    get:
+      operationId: get-cars
+      parameters:
+      - description: Car UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/car.Car'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get a car
+      tags:
+      - cars
   /categories:
     get:
-      description: Retrieve a list of categories filtered, sorted, and paginated by
-        query criteria
+      description: 'Retrieve a page of categories filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
       operationId: search-categories
       parameters:
       - description: 'Page number for pagination (default: 1)'
         in: query
         name: page
         type: integer
-      - description: 'Filter expression in format: column,operator,value (e.g. name,eq,electronics)'
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
         in: query
         name: filter
         type: string
@@ -40,9 +495,466 @@ paths:
             items:
               $ref: '#/definitions/category.Category'
             type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/routes.ErrorResponse'
       summary: Search categories
+      tags:
+      - categories
+  /categories/{id}:
+    get:
+      operationId: get-categories
+      parameters:
+      - description: Category slug, e.g. f1 (case-insensitive)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/category.Category'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get a category
+      tags:
+      - categories
+  /chassis:
+    get:
+      description: 'Retrieve a page of chassis filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-chassis
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. name,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching chassis
+          schema:
+            items:
+              $ref: '#/definitions/chassis.Chassis'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search chassis
+      tags:
+      - chassis
+  /chassis/{id}:
+    get:
+      operationId: get-chassis
+      parameters:
+      - description: Chassis UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chassis.Chassis'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get a chassis
+      tags:
+      - chassis
+  /circuits:
+    get:
+      description: 'Retrieve a page of circuits filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-circuits
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. name,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching circuits
+          schema:
+            items:
+              $ref: '#/definitions/circuit.Circuit'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search circuits
+      tags:
+      - circuits
+  /circuits/{id}:
+    get:
+      operationId: get-circuits
+      parameters:
+      - description: Circuit UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/circuit.Circuit'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get a circuit
+      tags:
+      - circuits
+  /drivers:
+    get:
+      description: 'Retrieve a page of drivers filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-drivers
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. last_name,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching drivers
+          schema:
+            items:
+              $ref: '#/definitions/driver.Driver'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search drivers
+      tags:
+      - drivers
+  /drivers/{id}:
+    get:
+      operationId: get-drivers
+      parameters:
+      - description: Driver UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/driver.Driver'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get a driver
+      tags:
+      - drivers
+  /engines:
+    get:
+      description: 'Retrieve a page of engines filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-engines
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. name,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching engines
+          schema:
+            items:
+              $ref: '#/definitions/engine.Engine'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search engines
+      tags:
+      - engines
+  /engines/{id}:
+    get:
+      operationId: get-engines
+      parameters:
+      - description: Engine UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/engine.Engine'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get an engine
+      tags:
+      - engines
+  /races:
+    get:
+      description: 'Retrieve a page of races filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-races
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. race_date,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching races
+          schema:
+            items:
+              $ref: '#/definitions/race.Race'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search races
+      tags:
+      - races
+  /races/{id}:
+    get:
+      operationId: get-races
+      parameters:
+      - description: Race UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/race.Race'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get a race
+      tags:
+      - races
+  /teams:
+    get:
+      description: 'Retrieve a page of teams filtered and sorted by query criteria.
+        Returns up to 26 rows: the 26th only signals that a next page exists.'
+      operationId: search-teams
+      parameters:
+      - description: 'Page number for pagination (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Filter expression in format: column,operator,value (operators:
+          eq neq gt gte lt lte ilike in; in takes values separated by |)'
+        in: query
+        name: filter
+        type: string
+      - description: 'Sort expression in format: column,direction (e.g. name,asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching teams
+          schema:
+            items:
+              $ref: '#/definitions/team.Team'
+            type: array
+        "400":
+          description: Invalid page, filter or sort
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Search teams
+      tags:
+      - teams
+  /teams/{id}:
+    get:
+      operationId: get-teams
+      parameters:
+      - description: Team UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/team.Team'
+        "400":
+          description: Invalid id
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Get a team
+      tags:
+      - teams
 swagger: "2.0"
