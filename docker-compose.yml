@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: test_postgres
+    container_name: racingdb_postgres
     environment:
       POSTGRES_DB: racingdb
       POSTGRES_USER: admin

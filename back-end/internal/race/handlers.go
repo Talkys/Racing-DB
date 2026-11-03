@@ -11,13 +11,12 @@ import (
 )
 
 type RaceHandler struct {
-	DB      *sql.DB
 	service *RaceService
 	log     *betterlogger.Logger
 }
 
 func NewRaceHandler(db *sql.DB) *RaceHandler {
-	return &RaceHandler{DB: db, service: NewRaceService(db), log: betterlogger.GetInstance()}
+	return &RaceHandler{service: NewRaceService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *RaceHandler) RegisterRoutes(mux *http.ServeMux) {

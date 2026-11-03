@@ -11,13 +11,12 @@ import (
 )
 
 type EngineHandler struct {
-	DB      *sql.DB
 	service *EngineService
 	log     *betterlogger.Logger
 }
 
 func NewEngineHandler(db *sql.DB) *EngineHandler {
-	return &EngineHandler{DB: db, service: NewEngineService(db), log: betterlogger.GetInstance()}
+	return &EngineHandler{service: NewEngineService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *EngineHandler) RegisterRoutes(mux *http.ServeMux) {

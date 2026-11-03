@@ -11,6 +11,6 @@ type Circuit struct {
 	Name      string    `json:"name"`
 	Location  string    `json:"location"`
 	Country   string    `json:"country"`
-	LengthKm  float32   `json:"length_km"`
+	LengthKm  float64   `json:"length_km"`
 	CreatedAt time.Time `json:"created_at"`
 }

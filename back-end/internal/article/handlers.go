@@ -11,13 +11,12 @@ import (
 )
 
 type ArticleHandler struct {
-	DB      *sql.DB
 	service *ArticleService
 	log     *betterlogger.Logger
 }
 
 func NewArticleHandler(db *sql.DB) *ArticleHandler {
-	return &ArticleHandler{DB: db, service: NewArticleService(db), log: betterlogger.GetInstance()}
+	return &ArticleHandler{service: NewArticleService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *ArticleHandler) RegisterRoutes(mux *http.ServeMux) {

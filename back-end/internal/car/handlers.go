@@ -11,13 +11,12 @@ import (
 )
 
 type CarHandler struct {
-	DB      *sql.DB
 	service *CarService
 	log     *betterlogger.Logger
 }
 
 func NewCarHandler(db *sql.DB) *CarHandler {
-	return &CarHandler{DB: db, service: NewCarService(db), log: betterlogger.GetInstance()}
+	return &CarHandler{service: NewCarService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *CarHandler) RegisterRoutes(mux *http.ServeMux) {

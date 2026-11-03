@@ -11,13 +11,12 @@ import (
 )
 
 type ChassisHandler struct {
-	DB      *sql.DB
 	service *ChassisService
 	log     *betterlogger.Logger
 }
 
 func NewChassisHandler(db *sql.DB) *ChassisHandler {
-	return &ChassisHandler{DB: db, service: NewChassisService(db), log: betterlogger.GetInstance()}
+	return &ChassisHandler{service: NewChassisService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *ChassisHandler) RegisterRoutes(mux *http.ServeMux) {

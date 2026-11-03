@@ -11,13 +11,12 @@ import (
 )
 
 type TeamHandler struct {
-	DB      *sql.DB
 	service *TeamService
 	log     *betterlogger.Logger
 }
 
 func NewTeamHandler(db *sql.DB) *TeamHandler {
-	return &TeamHandler{DB: db, service: NewTeamService(db), log: betterlogger.GetInstance()}
+	return &TeamHandler{service: NewTeamService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *TeamHandler) RegisterRoutes(mux *http.ServeMux) {

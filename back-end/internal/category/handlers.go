@@ -11,13 +11,12 @@ import (
 )
 
 type CategoryHandler struct {
-	DB      *sql.DB
 	service *CategoryService
 	log     *betterlogger.Logger
 }
 
 func NewCategoryHandler(db *sql.DB) *CategoryHandler {
-	return &CategoryHandler{DB: db, service: NewCategoryService(db), log: betterlogger.GetInstance()}
+	return &CategoryHandler{service: NewCategoryService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *CategoryHandler) RegisterRoutes(mux *http.ServeMux) {

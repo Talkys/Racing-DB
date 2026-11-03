@@ -11,13 +11,12 @@ import (
 )
 
 type CircuitHandler struct {
-	DB      *sql.DB
 	service *CircuitService
 	log     *betterlogger.Logger
 }
 
 func NewCircuitHandler(db *sql.DB) *CircuitHandler {
-	return &CircuitHandler{DB: db, service: NewCircuitService(db), log: betterlogger.GetInstance()}
+	return &CircuitHandler{service: NewCircuitService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *CircuitHandler) RegisterRoutes(mux *http.ServeMux) {

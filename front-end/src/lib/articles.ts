@@ -4,10 +4,6 @@ import type { Fields } from './dom.ts'
 import { articleHref, formatDate } from './format.ts'
 import { pickLanguage } from './language.ts'
 
-/** Drafts (no published_at) and future-dated articles behave as non-existent. The API already hides them; this is a safety net. */
-export const isVisible = (article: Article) =>
-  article.published_at != null && new Date(article.published_at).getTime() <= Date.now()
-
 export const textsOf = async (articleId: string) =>
   (await search('article-texts', { filter: `article_id,eq,${articleId}` })).items
 
@@ -39,14 +35,14 @@ async function toCard(article: Article): Promise<ArticleCard> {
 
 const byNewest = (a: Article, b: Article) => (b.published_at ?? '').localeCompare(a.published_at ?? '')
 
-/** Visible articles about one entity. Category slugs are not unique across types, hence the entity_type check. */
+/** Published articles about one entity (the API hides drafts and future-dated ones). Category slugs are not unique across types, hence the entity_type check. */
 export async function entityArticles(entityType: Article['entity_type'], entityId: string): Promise<ArticleCard[]> {
   const { items } = await search('articles', { filter: `entity_id,eq,${entityId}` })
-  return Promise.all(items.filter((a) => a.entity_type === entityType && isVisible(a)).sort(byNewest).map(toCard))
+  return Promise.all(items.filter((a) => a.entity_type === entityType).sort(byNewest).map(toCard))
 }
 
 /** Most recently published articles. */
 export async function latestArticles(limit: number): Promise<ArticleCard[]> {
   const { items } = await search('articles', { sort: 'published_at,desc' })
-  return Promise.all(items.filter(isVisible).slice(0, limit).map(toCard))
+  return Promise.all(items.slice(0, limit).map(toCard))
 }

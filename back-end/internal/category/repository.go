@@ -27,7 +27,7 @@ var categoryColumns = []string{"id", "name", "description", "is_active"}
 
 func scanCategory(row database.Scanner) (Category, error) {
 	var x Category
-	err := row.Scan(&x.ID, &x.Name, &x.Description, &x.Is_active)
+	err := row.Scan(&x.ID, &x.Name, &x.Description, &x.IsActive)
 	return x, err
 }
 

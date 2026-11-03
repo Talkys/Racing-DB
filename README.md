@@ -2,6 +2,16 @@
 Racing DB is a database frontend service for racing data compatible with multiple categories. The idea is to
 make a very refined codebase to showcase my back end architecture model and serve as a portfolio project as well.
 
+## Requirements
+
+| Tool | Minimum | Notes |
+|---|---|---|
+| Go | 1.27 | `back-end/go.mod` |
+| Bun | 1.3 | Reads the text `bun.lock` (`configVersion`) |
+| TypeScript | 7.0 | Installed by `bun install` |
+| Vite | 8.3 | Installed by `bun install` |
+| Docker | Compose v2 | Uses `docker compose`, not `docker-compose` |
+
 ## Running locally
 
 Three processes, each in its own terminal. Front end and back end run separately for now; the Vite dev server

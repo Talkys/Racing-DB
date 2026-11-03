@@ -11,13 +11,12 @@ import (
 )
 
 type DriverHandler struct {
-	DB      *sql.DB
 	service *DriverService
 	log     *betterlogger.Logger
 }
 
 func NewDriverHandler(db *sql.DB) *DriverHandler {
-	return &DriverHandler{DB: db, service: NewDriverService(db), log: betterlogger.GetInstance()}
+	return &DriverHandler{service: NewDriverService(db), log: betterlogger.GetInstance()}
 }
 
 func (h *DriverHandler) RegisterRoutes(mux *http.ServeMux) {

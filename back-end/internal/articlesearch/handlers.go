@@ -20,13 +20,12 @@ const maxQueryRunes = 200
 var languagePattern = regexp.MustCompile(`^[a-z]{2,3}(-[a-z0-9]{2,8})*$`)
 
 type ArticleSearchHandler struct {
-	DB      *sql.DB
 	service *ArticleSearchService
 	log     *betterlogger.Logger
 }
 
 func NewArticleSearchHandler(db *sql.DB) *ArticleSearchHandler {
-	return &ArticleSearchHandler{DB: db, service: NewArticleSearchService(db), log: betterlogger.GetInstance()}
+	return &ArticleSearchHandler{service: NewArticleSearchService(db), log: betterlogger.GetInstance()}
 }
 
 // RegisterRoutes must not clash with GET /articles/{id}: a literal segment is more specific, so it wins.

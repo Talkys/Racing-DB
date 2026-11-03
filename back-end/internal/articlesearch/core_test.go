@@ -46,6 +46,25 @@ func TestBuildPreview(t *testing.T) {
 			want:  []PreviewSegment{{Text: "Intro. Max Verstappen"}},
 		},
 		{
+			name:  "title with a fold of different UTF-8 length is dropped",
+			raw:   ptr("STRAẞENRENNEN IN MONZA — Ein Rückblick"),
+			title: ptr("Straßenrennen in Monza"),
+			want:  []PreviewSegment{{Text: "Ein Rückblick"}},
+		},
+		{
+			name:        "multibyte title is dropped across segments",
+			raw:         ptr("Vitória em " + matchStart + "Mônaco" + matchStop + ": corrida sem " + matchStart + "sustos" + matchStop),
+			title:       ptr("vitória em mônaco"),
+			highlighted: true,
+			want:        []PreviewSegment{{Text: "corrida sem "}, {Text: "sustos", Match: true}},
+		},
+		{
+			name:  "text shorter than a multibyte title is kept",
+			raw:   ptr("Vitória"),
+			title: ptr("Vitória em Mônaco"),
+			want:  []PreviewSegment{{Text: "Vitória"}},
+		},
+		{
 			name:        "unpaired markers never leak",
 			raw:         ptr("broken marker"),
 			highlighted: true,

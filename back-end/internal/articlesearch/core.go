@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // previewRunes caps browse previews (search previews are sized by ts_headline).
@@ -85,11 +86,11 @@ func trimPrefix(segments []PreviewSegment, title string) []PreviewSegment {
 		plain.WriteString(seg.Text)
 	}
 	text := plain.String()
-	if title == "" || len(text) <= len(title) || !strings.EqualFold(text[:len(title)], title) {
+	cut, ok := foldPrefixLen(text, title)
+	if title == "" || !ok {
 		return segments
 	}
 
-	cut := len(title)
 	for _, r := range text[cut:] {
 		if !unicode.IsSpace(r) && !unicode.IsPunct(r) {
 			break
@@ -111,6 +112,25 @@ func trimPrefix(segments []PreviewSegment, title string) []PreviewSegment {
 		trimmed = append(trimmed, seg)
 	}
 	return trimmed
+}
+
+// foldPrefixLen reports whether text starts with prefix, case-insensitively, and the byte length of the match
+// in text. It compares rune by rune, since folded runes can differ in UTF-8 length (ß is 2 bytes, ẞ is 3).
+func foldPrefixLen(text, prefix string) (int, bool) {
+	n := 0
+	for prefix != "" {
+		if n == len(text) {
+			return 0, false
+		}
+		want, wantSize := utf8.DecodeRuneInString(prefix)
+		got, gotSize := utf8.DecodeRuneInString(text[n:])
+		if !strings.EqualFold(string(want), string(got)) {
+			return 0, false
+		}
+		prefix = prefix[wantSize:]
+		n += gotSize
+	}
+	return n, true
 }
 
 // truncate shortens an unhighlighted preview to about max runes, at a word boundary.

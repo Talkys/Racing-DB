@@ -1,16 +1,16 @@
 import { get } from '../api/client.ts'
-import { isVisible, textsOf } from '../lib/articles.ts'
+import { textsOf } from '../lib/articles.ts'
 import { fill, fillList, section, showError } from '../lib/dom.ts'
 import { articleHref, entityHref, formatDate, formatDateTime } from '../lib/format.ts'
 import { pickLanguage } from '../lib/language.ts'
 import { renderMarkdown } from '../lib/markdown.ts'
 
 // article.html?id=<article id>[&lang=<tag>]
-// Articles have no index page. Each language is an independent text, shown exactly as stored.
+// Listed on articles.html. Each language is an independent text, shown exactly as stored.
 
 async function load(id: string, requestedLang: string | null): Promise<void> {
   const article = await get('articles', id)
-  if (!article || !isVisible(article)) throw new Error(`Article with ID '${id}' does not exist.`)
+  if (!article) throw new Error(`Article with ID '${id}' does not exist.`)
 
   const texts = (await textsOf(article.id)).sort((a, b) => a.language.localeCompare(b.language))
   const lang = pickLanguage(texts.map((t) => t.language), requestedLang)
