@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type ChassisHandler struct {
 	service *ChassisService
-	log     *betterlogger.Logger
 }
 
 func NewChassisHandler(db *sql.DB) *ChassisHandler {
-	return &ChassisHandler{service: NewChassisService(db), log: betterlogger.GetInstance()}
+	return &ChassisHandler{service: NewChassisService(db)}
 }
 
 func (h *ChassisHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *ChassisHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /chassis [get]
 func (h *ChassisHandler) SearchChassis(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *ChassisHandler) SearchChassis(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /chassis/{id} [get]
 func (h *ChassisHandler) GetChassis(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.UUIDPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

@@ -2,6 +2,8 @@
 Racing DB is a database frontend service for racing data compatible with multiple categories. The idea is to
 make a very refined codebase to showcase my back end architecture model and serve as a portfolio project as well.
 
+Right now the project is in early development so a lot of things may change before I start branching hard.
+
 ## Requirements
 
 | Tool | Minimum | Notes |
@@ -43,6 +45,11 @@ go run ./cmd/api
 |---|---|
 | `DATABASE_URL` | `postgres://admin:adminpassword@localhost:5432/racingdb?sslmode=disable` |
 | `PORT` | `5000` |
+| `LOG_FORMAT` | `text` (`json` for structured logs) |
+| `LOG_LEVEL` | `info` (`debug`, `warn`, `error`) |
+
+Logs go to stdout, one access-log line per request. Each response carries an `X-Request-Id` header (an incoming one
+is reused when it is safe to log), and the same id is in the log line.
 
 - Tests: `go test ./...`
 - Smoke tests against the running API and a fresh seed: `scripts/smoke.sh`

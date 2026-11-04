@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type TeamHandler struct {
 	service *TeamService
-	log     *betterlogger.Logger
 }
 
 func NewTeamHandler(db *sql.DB) *TeamHandler {
-	return &TeamHandler{service: NewTeamService(db), log: betterlogger.GetInstance()}
+	return &TeamHandler{service: NewTeamService(db)}
 }
 
 func (h *TeamHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *TeamHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /teams [get]
 func (h *TeamHandler) SearchTeams(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *TeamHandler) SearchTeams(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /teams/{id} [get]
 func (h *TeamHandler) GetTeam(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.UUIDPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

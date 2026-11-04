@@ -7,7 +7,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"backend/modules/betterlogger"
 	"backend/utils/apperror"
 	"backend/utils/constants"
 	"backend/utils/queries"
@@ -21,11 +20,10 @@ var languagePattern = regexp.MustCompile(`^[a-z]{2,3}(-[a-z0-9]{2,8})*$`)
 
 type ArticleSearchHandler struct {
 	service *ArticleSearchService
-	log     *betterlogger.Logger
 }
 
 func NewArticleSearchHandler(db *sql.DB) *ArticleSearchHandler {
-	return &ArticleSearchHandler{service: NewArticleSearchService(db), log: betterlogger.GetInstance()}
+	return &ArticleSearchHandler{service: NewArticleSearchService(db)}
 }
 
 // RegisterRoutes must not clash with GET /articles/{id}: a literal segment is more specific, so it wins.
@@ -53,7 +51,6 @@ func (h *ArticleSearchHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /articles/search [get]
 func (h *ArticleSearchHandler) SearchArticles(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	params := r.URL.Query()
 
 	page, err := queries.ParsePage(params)

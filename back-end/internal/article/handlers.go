@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type ArticleHandler struct {
 	service *ArticleService
-	log     *betterlogger.Logger
 }
 
 func NewArticleHandler(db *sql.DB) *ArticleHandler {
-	return &ArticleHandler{service: NewArticleService(db), log: betterlogger.GetInstance()}
+	return &ArticleHandler{service: NewArticleService(db)}
 }
 
 func (h *ArticleHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *ArticleHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /articles [get]
 func (h *ArticleHandler) SearchArticles(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *ArticleHandler) SearchArticles(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /articles/{id} [get]
 func (h *ArticleHandler) GetArticle(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.UUIDPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

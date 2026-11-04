@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type EngineHandler struct {
 	service *EngineService
-	log     *betterlogger.Logger
 }
 
 func NewEngineHandler(db *sql.DB) *EngineHandler {
-	return &EngineHandler{service: NewEngineService(db), log: betterlogger.GetInstance()}
+	return &EngineHandler{service: NewEngineService(db)}
 }
 
 func (h *EngineHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *EngineHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /engines [get]
 func (h *EngineHandler) SearchEngines(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *EngineHandler) SearchEngines(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /engines/{id} [get]
 func (h *EngineHandler) GetEngine(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.UUIDPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

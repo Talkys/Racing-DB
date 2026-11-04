@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type CircuitHandler struct {
 	service *CircuitService
-	log     *betterlogger.Logger
 }
 
 func NewCircuitHandler(db *sql.DB) *CircuitHandler {
-	return &CircuitHandler{service: NewCircuitService(db), log: betterlogger.GetInstance()}
+	return &CircuitHandler{service: NewCircuitService(db)}
 }
 
 func (h *CircuitHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *CircuitHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /circuits [get]
 func (h *CircuitHandler) SearchCircuits(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *CircuitHandler) SearchCircuits(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /circuits/{id} [get]
 func (h *CircuitHandler) GetCircuit(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.UUIDPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

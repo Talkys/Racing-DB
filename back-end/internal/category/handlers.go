@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type CategoryHandler struct {
 	service *CategoryService
-	log     *betterlogger.Logger
 }
 
 func NewCategoryHandler(db *sql.DB) *CategoryHandler {
-	return &CategoryHandler{service: NewCategoryService(db), log: betterlogger.GetInstance()}
+	return &CategoryHandler{service: NewCategoryService(db)}
 }
 
 func (h *CategoryHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *CategoryHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /categories [get]
 func (h *CategoryHandler) SearchCategories(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *CategoryHandler) SearchCategories(w http.ResponseWriter, r *http.Reques
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /categories/{id} [get]
 func (h *CategoryHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.SlugPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

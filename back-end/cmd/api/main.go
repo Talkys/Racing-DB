@@ -12,12 +12,19 @@ import (
 	"backend/internal/engine"
 	"backend/internal/race"
 	"backend/internal/team"
-	"backend/modules/betterlogger"
 	"backend/modules/database"
+	"backend/modules/logging"
 	"backend/utils/constants"
 	"backend/utils/routes"
+	"context"
+	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 // @title RacingDB API
@@ -25,34 +32,39 @@ import (
 // @description Read-only racing database: categories, circuits, drivers, races, teams, engines, chassis, cars and articles.
 // @BasePath /api/1
 func main() {
-	err := betterlogger.Init("app.log")
+	log, err := logging.New(os.Stdout, os.Getenv("LOG_FORMAT"), os.Getenv("LOG_LEVEL"))
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-	defer betterlogger.Close()
+	slog.SetDefault(log)
 
-	log := betterlogger.GetInstance()
+	if err := run(log); err != nil {
+		log.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
 
-	log.Info("Starting application initialization...")
+// run holds the whole lifetime of the server, so its defers (db.Close) run before main exits.
+func run(log *slog.Logger) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
-		log.Warn("DATABASE_URL environment variable not found. Using local default connection string.")
+		log.Warn("DATABASE_URL not set, using the local default connection string")
 		connStr = "postgres://admin:adminpassword@localhost:5432/racingdb?sslmode=disable"
 	}
 
-	log.Info("Connecting to PostgreSQL database pool...")
 	db, err := database.NewPostgresDB(connStr)
 	if err != nil {
-		log.Error("Initialization error: %v", err)
-		os.Exit(1)
+		return err
 	}
 	defer db.Close()
-	log.Success("Database connection pool established successfully.")
+	log.Info("database connection pool established")
 
 	mux := http.NewServeMux()
 
-	log.Info("Registering routes...")
 	// REGISTER HANDLERS HERE (MAYBE THERE'S A WAY TO DO BETTER)
 	categoryHandler := category.NewCategoryHandler(db)
 	categoryHandler.RegisterRoutes(mux)
@@ -94,9 +106,39 @@ func main() {
 	if port == ":" {
 		port = ":5000"
 	}
-	log.Info("Starting server on port %s...", port)
-	if err := http.ListenAndServe(port, mux); err != nil {
-		log.Error("Server stopped: %v", err)
-		os.Exit(1)
+
+	srv := &http.Server{
+		Addr:              port,
+		Handler:           routes.Middleware(log, mux),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelWarn),
 	}
+
+	serveErr := make(chan error, 1)
+	go func() {
+		log.Info("server listening", "addr", port)
+		serveErr <- srv.ListenAndServe()
+	}()
+
+	select {
+	case err := <-serveErr:
+		return err
+	case <-ctx.Done():
+	}
+	stop() // a second Ctrl+C now kills the process instead of waiting
+
+	log.Info("shutting down")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("shutdown: %w", err)
+	}
+	if err := <-serveErr; !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	log.Info("server stopped")
+	return nil
 }

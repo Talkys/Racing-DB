@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type DriverHandler struct {
 	service *DriverService
-	log     *betterlogger.Logger
 }
 
 func NewDriverHandler(db *sql.DB) *DriverHandler {
-	return &DriverHandler{service: NewDriverService(db), log: betterlogger.GetInstance()}
+	return &DriverHandler{service: NewDriverService(db)}
 }
 
 func (h *DriverHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *DriverHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /drivers [get]
 func (h *DriverHandler) SearchDrivers(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *DriverHandler) SearchDrivers(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /drivers/{id} [get]
 func (h *DriverHandler) GetDriver(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.UUIDPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

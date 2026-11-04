@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"backend/modules/betterlogger"
 	"backend/utils/constants"
 	"backend/utils/queries"
 	"backend/utils/routes"
@@ -12,11 +11,10 @@ import (
 
 type CarHandler struct {
 	service *CarService
-	log     *betterlogger.Logger
 }
 
 func NewCarHandler(db *sql.DB) *CarHandler {
-	return &CarHandler{service: NewCarService(db), log: betterlogger.GetInstance()}
+	return &CarHandler{service: NewCarService(db)}
 }
 
 func (h *CarHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -50,7 +48,6 @@ func (h *CarHandler) RegisterRoutes(mux *http.ServeMux) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /cars [get]
 func (h *CarHandler) SearchCars(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	sc, err := queries.BuildCriteriaFromURL(r.URL.Query())
 	if err != nil {
 		routes.WriteError(w, err)
@@ -78,7 +75,6 @@ func (h *CarHandler) SearchCars(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"
 // @Router /cars/{id} [get]
 func (h *CarHandler) GetCar(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("%s", r.URL.String())
 	id, err := routes.UUIDPathValue(r, "id")
 	if err != nil {
 		routes.WriteError(w, err)

@@ -1,10 +1,11 @@
 package routes
 
 import (
-	"backend/modules/betterlogger"
 	"backend/utils/apperror"
+	"bytes"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 )
 
@@ -13,30 +14,36 @@ type ErrorResponse struct {
 	Error  string `json:"error"`
 }
 
+// internalErrorBody is written as-is when even a response cannot be encoded.
+const internalErrorBody = `{"status":500,"error":"internal server error"}` + "\n"
+
+// WriteJSONResponse encodes data before touching the response, so an encoding failure can still become a 500.
 func WriteJSONResponse(w http.ResponseWriter, status int, data any) {
-	log := betterlogger.GetInstance()
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(data); err != nil {
+		slog.Error("encoding response", "status", status, "err", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(internalErrorBody))
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		// Log this error in production
-		log.Error("%s", "Error processing response: "+err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	_, _ = w.Write(buf.Bytes())
 }
 
 // WriteError answers client errors (apperror.Error) with their own status and message.
 // Anything else is logged and answered with a generic 500, so database details never reach the client.
 func WriteError(w http.ResponseWriter, err error) {
-	log := betterlogger.GetInstance()
-
 	var appErr *apperror.Error
 	if errors.As(err, &appErr) {
-		log.Warn("%s", appErr.Message)
+		slog.Warn("client error", "status", appErr.Status, "err", appErr.Message)
 		WriteJSONResponse(w, appErr.Status, ErrorResponse{Status: appErr.Status, Error: appErr.Message})
 		return
 	}
 
-	log.Error("%s", err.Error())
+	slog.Error("internal error", "err", err)
 	WriteJSONResponse(w, http.StatusInternalServerError, ErrorResponse{Status: http.StatusInternalServerError, Error: "internal server error"})
 }
 
