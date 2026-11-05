@@ -1,0 +1,8 @@
+{
+  // Tests run under Bun, so they get Bun's types instead of the browser-only ones in ../tsconfig.json.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun"]
+  },
+  "include": [".", "../src"]
+}

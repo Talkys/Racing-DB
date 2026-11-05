@@ -39,7 +39,7 @@ for (const [path, table] of TABLES) {
   const rows = mockData[path] as unknown as Record<string, unknown>[]
   const columns = Object.keys(rows[0])
   out.push(`INSERT INTO ${table} (${columns.join(', ')}) VALUES`)
-  out.push(rows.map((row) => `  (${columns.map((c) => literal(c, row[c])).join(', ')})`).join(',\n') + ';', '')
+  out.push(`${rows.map((row) => `  (${columns.map((c) => literal(c, row[c])).join(', ')})`).join(',\n')};`, '')
 }
 
 const target = resolve(import.meta.dirname, '../../seed.sql')

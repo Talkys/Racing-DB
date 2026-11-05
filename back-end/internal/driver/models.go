@@ -1,8 +1,9 @@
 package driver
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Driver struct {

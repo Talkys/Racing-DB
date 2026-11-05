@@ -17,6 +17,7 @@ import (
 	"backend/utils/constants"
 	"backend/utils/routes"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -63,6 +64,49 @@ func run(log *slog.Logger) error {
 	defer db.Close()
 	log.Info("database connection pool established")
 
+	port := ":" + os.Getenv("PORT")
+	if port == ":" {
+		port = ":5000"
+	}
+
+	srv := &http.Server{
+		Addr:              port,
+		Handler:           newHandler(log, db),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelWarn),
+	}
+
+	serveErr := make(chan error, 1)
+	go func() {
+		log.Info("server listening", "addr", port)
+		serveErr <- srv.ListenAndServe()
+	}()
+
+	select {
+	case err := <-serveErr:
+		return err
+	case <-ctx.Done():
+	}
+	stop() // a second Ctrl+C now kills the process instead of waiting
+
+	log.Info("shutting down")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("shutdown: %w", err)
+	}
+	if err := <-serveErr; !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	log.Info("server stopped")
+	return nil
+}
+
+// newHandler wires every API route on one mux, wrapped in the request middleware.
+func newHandler(log *slog.Logger, db *sql.DB) http.Handler {
 	mux := http.NewServeMux()
 
 	// REGISTER HANDLERS HERE (MAYBE THERE'S A WAY TO DO BETTER)
@@ -102,43 +146,5 @@ func run(log *slog.Logger) error {
 	// Anything under the API prefix that no handler claimed gets a JSON 404 instead of the mux's plain text.
 	mux.HandleFunc(constants.BaseApiUrl_V1+"/", routes.NotFound)
 
-	port := ":" + os.Getenv("PORT")
-	if port == ":" {
-		port = ":5000"
-	}
-
-	srv := &http.Server{
-		Addr:              port,
-		Handler:           routes.Middleware(log, mux),
-		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       10 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       120 * time.Second,
-		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelWarn),
-	}
-
-	serveErr := make(chan error, 1)
-	go func() {
-		log.Info("server listening", "addr", port)
-		serveErr <- srv.ListenAndServe()
-	}()
-
-	select {
-	case err := <-serveErr:
-		return err
-	case <-ctx.Done():
-	}
-	stop() // a second Ctrl+C now kills the process instead of waiting
-
-	log.Info("shutting down")
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		return fmt.Errorf("shutdown: %w", err)
-	}
-	if err := <-serveErr; !errors.Is(err, http.ErrServerClosed) {
-		return err
-	}
-	log.Info("server stopped")
-	return nil
+	return routes.Middleware(log, mux)
 }

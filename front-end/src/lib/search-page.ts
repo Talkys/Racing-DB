@@ -1,6 +1,6 @@
-import { ApiError, search, type Page, type Query } from '../api/client.ts'
+import { ApiError, type Page, type Query, search } from '../api/client.ts'
 import type { EntityMap, EntityPath } from '../api/types.ts'
-import { fillList, type Fields } from './dom.ts'
+import { type Fields, fillList } from './dom.ts'
 
 export { dash } from './format.ts'
 

@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
-import { resolve } from 'path'
 import fs from 'node:fs'
+import { resolve } from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
@@ -10,7 +10,7 @@ export default defineConfig({
       name: 'html-ext-fallback',
       configureServer(server) {
         return () => {
-          server.middlewares.use((req, res, next) => {
+          server.middlewares.use((req, _res, next) => {
             if (req.url && !req.url.includes('.') && req.url !== '/') {
               const htmlPath = resolve(__dirname, `${req.url.slice(1)}.html`)
               if (fs.existsSync(htmlPath)) {

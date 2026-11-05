@@ -84,7 +84,7 @@ func NewArticleSearchRepository() *ArticleSearchRepository {
 func (r *ArticleSearchRepository) SearchArticles(ctx context.Context, sc SearchCriteria) ([]rawResult, error) {
 	exec := database.ExtractTx(ctx)
 	if exec == nil {
-		return nil, fmt.Errorf("No transaction provided")
+		return nil, fmt.Errorf("no transaction provided")
 	}
 
 	limit := PageSize + 1

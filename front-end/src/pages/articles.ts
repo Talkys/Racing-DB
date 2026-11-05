@@ -54,7 +54,9 @@ async function load(): Promise<void> {
       }
     }),
   )
-  results.querySelectorAll<HTMLElement>('[data-preview]').forEach((el, i) => renderPreview(el, items[i].preview))
+  results.querySelectorAll<HTMLElement>('[data-preview]').forEach((el, i) => {
+    renderPreview(el, items[i].preview)
+  })
 
   $('[data-empty]').hidden = items.length > 0
   $('[data-page]').textContent = String(page)

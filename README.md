@@ -51,7 +51,10 @@ go run ./cmd/api
 Logs go to stdout, one access-log line per request. Each response carries an `X-Request-Id` header (an incoming one
 is reused when it is safe to log), and the same id is in the log line.
 
-- Tests: `go test ./...`
+- Tests: `go test ./...`. The integration tests in `cmd/api` run the real handler against a fresh database loaded
+  with `init.sql` + `seed.sql`, created on the server in `TEST_DATABASE_URL` (e.g. the compose one) or, when that is
+  unset, in a throwaway [testcontainers](https://golang.testcontainers.org/) Postgres. Without either they are skipped.
+- Lint: `golangci-lint run ./...` (config in `.golangci.yml`, includes the `gofmt`/`goimports` check)
 - Smoke tests against the running API and a fresh seed: `scripts/smoke.sh`
 - Swagger docs: regenerate with `go run github.com/swaggo/swag/cmd/swag@v1.16.4 init -g cmd/api/main.go -o docs --parseInternal`
 
@@ -67,6 +70,10 @@ bun run dev
 |---|---|---|
 | `VITE_API_TARGET` | `http://localhost:5000` | Where the dev server proxies `/api` |
 | `VITE_API_MOCK` | unset | `true` serves everything from `src/api/mock-data.ts`, no back end needed |
+
+- Tests: `bun test` (suites in `test/`)
+- Lint: `bun run lint` ([Biome](https://biomejs.dev), lint and import order only; formatting is by hand)
+- Type check, including the tests: `bun run typecheck`
 
 ## API
 

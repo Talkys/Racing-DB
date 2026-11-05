@@ -1,7 +1,7 @@
 import { get } from '../api/client.ts'
 import { isF1Race, isMotoGPRace, isWECRace } from '../api/guards.ts'
 import { entityArticles } from '../lib/articles.ts'
-import { fill, fillList, section, showError, type Fields } from '../lib/dom.ts'
+import { type Fields, fill, fillList, section, showError } from '../lib/dom.ts'
 import { loadDrivers } from '../lib/drivers.ts'
 import { dash, driverName, formatDate } from '../lib/format.ts'
 

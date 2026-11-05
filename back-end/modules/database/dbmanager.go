@@ -51,7 +51,7 @@ func WithReadTx[T any](ctx context.Context, db *sql.DB, fn func(ctx context.Cont
 func PerformSearch(ctx context.Context, sc queries.SearchCriteria, cols []string, table string, cfg queries.EntitySearchConfig) (*sql.Rows, error) {
 	exec := ExtractTx(ctx)
 	if exec == nil {
-		return nil, fmt.Errorf("No transaction provided")
+		return nil, fmt.Errorf("no transaction provided")
 	}
 
 	query, args, err := queries.BuildSearchQuery(cols, table, cfg, sc)
@@ -72,7 +72,7 @@ func PerformSearch(ctx context.Context, sc queries.SearchCriteria, cols []string
 func PerformGet(ctx context.Context, id any, cols []string, table string, cfg queries.EntitySearchConfig) (*sql.Row, error) {
 	exec := ExtractTx(ctx)
 	if exec == nil {
-		return nil, fmt.Errorf("No transaction provided")
+		return nil, fmt.Errorf("no transaction provided")
 	}
 
 	return exec.QueryRowContext(ctx, queries.BuildGetQuery(cols, table, cfg), id), nil

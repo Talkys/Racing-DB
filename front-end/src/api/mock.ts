@@ -1,6 +1,6 @@
 import type { Query } from './client.ts'
-import type { Article, ArticleSearchResult, ArticleText, EntityMap, EntityPath, PreviewSegment } from './types.ts'
 import { mockData } from './mock-data.ts'
+import type { Article, ArticleSearchResult, ArticleText, EntityMap, EntityPath, PreviewSegment } from './types.ts'
 
 const PAGE_SIZE = 25
 
@@ -135,9 +135,9 @@ function mockPreview(plain: string, title: string, words: string[]): PreviewSegm
   let text = plain.toLowerCase().startsWith(title.toLowerCase()) ? plain.slice(title.length).replace(/^[\s\p{P}]+/u, '') || plain : plain
   if (words.length) {
     const at = Math.max(0, text.toLowerCase().indexOf(words[0]) - 80)
-    text = (at > 0 ? '… ' : '') + text.slice(at, at + 240)
+    text = `${at > 0 ? '… ' : ''}${text.slice(at, at + 240)}`
   } else if (text.length > 240) {
-    text = text.slice(0, 240).replace(/\s+\S*$/, '') + ' …'
+    text = `${text.slice(0, 240).replace(/\s+\S*$/, '')} …`
   }
   const segments: PreviewSegment[] = []
   for (const part of text.split(/([\p{L}\p{N}]+)/u)) {
