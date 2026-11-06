@@ -13,6 +13,8 @@ ARTICLE_DRAFT=75000000-0000-4000-8000-000000000003
 # Dated 2099-01-01 in front-end/src/api/mock-data.ts; the "never served" checks below need it to stay in the future.
 ARTICLE_FUTURE=75000000-0000-4000-8000-000000000006
 UNKNOWN=00000000-0000-4000-8000-000000000099
+# 2025 Monaco GP: has more articles (a live blog) than fit on one page.
+MONACO_2025=77000000-0000-4000-8000-000000000004
 
 pass=0
 fail=0
@@ -90,6 +92,15 @@ check 200 "/articles/search" '' "$ARTICLE_FUTURE"
 check 400 "/articles/search?lang=not_a_lang" 'invalid lang'
 check 400 "/articles/search?page=0" 'invalid page'
 check 400 "/articles/search?q=$(printf 'a%.0s' {1..201})" 'invalid q'
+
+# 10: several filters (AND-ed) and sorts per request
+check 200 "/races?filter=category_id,eq,f1&filter=season,eq,2026" '"name":"Monaco Grand Prix"' '"season":2025'
+check 200 "/races?filter=category_id,eq,wec&sort=season,desc,round" '"name":"24 Hours of Le Mans"' '"category_id":"f1"'
+check 200 "/races?sort=season&sort=name,desc" '"season":2025'
+check 400 "/races?filter=category_id,eq,f1&filter=foo,eq,1" 'invalid filter column'
+check 400 "/races?sort=season,season,desc" 'duplicate sort column'
+check 200 "/articles?filter=entity_type,eq,race&filter=entity_id,eq,$MONACO_2025&page=2" '"kind":"live"' "$ARTICLE_MONACO"
+check 200 "/engines?sort=manufacturer,desc" '"manufacturer":'
 
 echo
 echo "$pass passed, $fail failed"

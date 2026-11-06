@@ -58,8 +58,8 @@ var Resource = crud.Resource[ArticleText]{
 // @ID search-article-texts
 // @Produce json
 // @Param page query int false "Page number for pagination (default: 1)"
-// @Param filter query string false "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)"
-// @Param sort query string false "Sort expression in format: column,direction (e.g. title,asc)"
+// @Param filter query []string false "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters." collectionFormat(multi)
+// @Param sort query []string false "Comma-separated columns, each optionally followed by asc or desc (e.g. title,desc), in priority order; may be repeated. Sortable: title, language" collectionFormat(multi)
 // @Success 200 {array} ArticleText "List of matching article texts"
 // @Failure 400 {object} routes.ErrorResponse "Invalid page, filter or sort"
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"

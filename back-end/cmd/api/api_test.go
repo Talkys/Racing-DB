@@ -39,67 +39,67 @@ type resource struct {
 	missing      string    // well-formed id that does not exist (404)
 	badID        string    // malformed id (400)
 	filter       [3]string // column, eq, value: must match ids[0]
-	sort         string
-	paged        bool // the seed holds more than one page
+	sorts        []string  // every sortable column
+	paged        bool      // the seed holds more than one page
 }
 
 var resources = []resource{
 	{
 		path: "categories", table: "categories", defaultOrder: "name ASC, id ASC",
 		ids: [2]string{"f1", "motogp"}, missing: "xyz", badID: "no!",
-		filter: [3]string{"is_active", "eq", "true"}, sort: "name",
+		filter: [3]string{"is_active", "eq", "true"}, sorts: []string{"id", "name", "is_active"},
 	},
 	{
 		path: "circuits", table: "circuits", defaultOrder: "name ASC, id ASC",
 		ids:     [2]string{"23fa3b45-df13-4f9e-a864-44aa4cf81190", "6fa85f64-5717-4562-b3fc-2c963f66afa6"},
 		missing: unknownUUID, badID: "not-a-uuid",
-		filter: [3]string{"country", "eq", "Monaco"}, sort: "name",
+		filter: [3]string{"country", "eq", "Monaco"}, sorts: []string{"name", "location", "country", "length_km"},
 	},
 	{
 		path: "drivers", table: "drivers", defaultOrder: "last_name ASC, first_name ASC, id ASC",
 		ids: [2]string{driverVer, driverBag}, missing: unknownUUID, badID: "not-a-uuid",
-		filter: [3]string{"nationality", "eq", "Dutch"}, sort: "last_name", paged: true,
+		filter: [3]string{"nationality", "eq", "Dutch"}, sorts: []string{"last_name", "first_name", "code", "nationality"}, paged: true,
 	},
 	{
 		path: "races", table: "races", defaultOrder: "race_date DESC, id ASC",
 		ids: [2]string{raceMonaco, raceMugello}, missing: unknownUUID, badID: "not-a-uuid",
-		filter: [3]string{"category_id", "eq", "f1"}, sort: "race_date", paged: true,
+		filter: [3]string{"category_id", "eq", "f1"}, sorts: []string{"race_date", "name", "category_id", "season", "round"}, paged: true,
 	},
 	{
 		path: "teams", table: "teams", defaultOrder: "name ASC, id ASC",
 		ids:     [2]string{"71000000-0000-4000-8000-000000000001", "71000000-0000-4000-8000-000000000002"},
 		missing: unknownUUID, badID: "not-a-uuid",
-		filter: [3]string{"country", "eq", "United Kingdom"}, sort: "name",
+		filter: [3]string{"country", "eq", "United Kingdom"}, sorts: []string{"name", "short_name", "country", "founded_year"},
 	},
 	{
 		path: "engines", table: "engines", defaultOrder: "manufacturer ASC, name ASC, id ASC",
 		ids:     [2]string{"72000000-0000-4000-8000-000000000001", "72000000-0000-4000-8000-000000000002"},
 		missing: unknownUUID, badID: "not-a-uuid",
-		filter: [3]string{"aspiration", "eq", "HYBRID_TURBO"}, sort: "name",
+		filter: [3]string{"aspiration", "eq", "HYBRID_TURBO"}, sorts: []string{"manufacturer", "name", "configuration", "displacement_cc", "cylinders", "aspiration", "power_kw"},
 	},
 	{
 		path: "chassis", table: "chassis", defaultOrder: "manufacturer ASC, name ASC, id ASC",
 		ids:     [2]string{"73000000-0000-4000-8000-000000000001", "73000000-0000-4000-8000-000000000002"},
 		missing: unknownUUID, badID: "not-a-uuid",
-		filter: [3]string{"material", "eq", "Carbon fibre monocoque"}, sort: "name",
+		filter: [3]string{"material", "eq", "Carbon fibre monocoque"}, sorts: []string{"manufacturer", "name", "material", "wheelbase_mm", "weight_kg"},
 	},
 	{
 		path: "cars", table: "cars", defaultOrder: "season DESC, name ASC, id ASC",
 		ids:     [2]string{"74000000-0000-4000-8000-000000000001", "74000000-0000-4000-8000-000000000002"},
 		missing: unknownUUID, badID: "not-a-uuid",
-		filter: [3]string{"season", "eq", "2026"}, sort: "name", paged: true,
+		filter: [3]string{"season", "eq", "2026"}, sorts: []string{"name", "season", "category_id"}, paged: true,
 	},
 	{
 		path: "articles", table: "articles", where: visibleArticle, defaultOrder: "published_at DESC, id ASC",
 		ids: [2]string{articleMonaco, articleF1}, missing: articleDraft, badID: "not-a-uuid",
-		filter: [3]string{"entity_type", "eq", "race"}, sort: "published_at",
+		filter: [3]string{"entity_type", "eq", "race"}, paged: true, sorts: []string{"published_at", "created_at", "entity_type", "kind"},
 	},
 	{
 		path: "article-texts", table: "article_texts", where: "article_id IN (SELECT id FROM articles WHERE " + visibleArticle + ")",
 		defaultOrder: "language ASC, id ASC",
 		ids:          [2]string{"76000000-0000-4000-8000-000000000001", "76000000-0000-4000-8000-000000000002"},
 		missing:      "76000000-0000-4000-8000-000000000004", badID: "not-a-uuid", // ...04 is the draft's text
-		filter: [3]string{"language", "eq", "en"}, sort: "title",
+		filter: [3]string{"language", "eq", "en"}, sorts: []string{"title", "language"},
 	},
 }
 
@@ -148,9 +148,11 @@ func TestResources(t *testing.T) {
 			})
 
 			t.Run("sort", func(t *testing.T) {
-				for _, dir := range []string{"asc", "desc"} {
-					rows := getList(t, res.path, url.Values{"sort": {res.sort + "," + dir}})
-					assertIDs(t, ids(rows), res.oracle(t, "", res.sort+" "+dir+", id ASC", pageSize+1))
+				for _, col := range res.sorts {
+					for _, dir := range []string{"asc", "desc"} {
+						rows := getList(t, res.path, url.Values{"sort": {col + "," + dir}})
+						assertIDs(t, ids(rows), res.oracle(t, "", col+" "+dir+", id ASC", pageSize+1))
+					}
 				}
 			})
 
@@ -180,8 +182,10 @@ func TestResources(t *testing.T) {
 					{"filter": {res.filter[0] + ",bogus,1"}},
 					{"filter": {res.filter[0]}},
 					{"filter": {"id,in,not-an-id|" + res.ids[0]}},
+					{"filter": {"id,eq," + res.ids[0], "nope,eq,1"}},
 					{"sort": {"nope,asc"}},
-					{"sort": {res.sort + ",sideways"}},
+					{"sort": {res.sorts[0] + ",sideways"}},
+					{"sort": {res.sorts[0], res.sorts[0] + ",desc"}},
 					{"page": {"0"}},
 					{"page": {"x"}},
 				} {
@@ -228,6 +232,45 @@ func TestFilterOperators(t *testing.T) {
 			assertIDs(t, ids(rows), res.oracle(t, c.where, res.defaultOrder, pageSize+1))
 		})
 	}
+}
+
+// Several filters and sorts in one request.
+func TestCombinedQueries(t *testing.T) {
+	requireDB(t)
+	cases := []struct {
+		res     string
+		query   url.Values
+		where   string
+		orderBy string
+	}{
+		{"races", url.Values{"filter": {"category_id,eq,f1", "season,eq,2026"}}, "category_id = 'f1' AND season = 2026", "race_date DESC, id ASC"},
+		{"races", url.Values{"filter": {"season,eq,2025", "round,gte,5", "round,lte,12"}}, "season = 2025 AND round BETWEEN 5 AND 12", "race_date DESC, id ASC"},
+		{"races", url.Values{"filter": {"category_id,eq,f1", "category_id,eq,wec"}}, "false", "race_date DESC, id ASC"},
+		{"races", url.Values{"sort": {"category_id,season,desc,round"}}, "", "category_id ASC, season DESC, round ASC, id ASC"},
+		{"races", url.Values{"sort": {"season,desc", "name"}, "filter": {"category_id,eq,motogp"}}, "category_id = 'motogp'", "season DESC, name ASC, id ASC"},
+		{"articles", url.Values{"filter": {"entity_type,eq,race", "entity_id,eq," + raceMonaco}}, fmt.Sprintf("entity_type = 'race' AND entity_id = '%s'", raceMonaco), "published_at DESC, id ASC"},
+		{"engines", url.Values{"sort": {"aspiration,desc,power_kw"}}, "", "aspiration DESC, power_kw ASC, id ASC"},
+		{"categories", url.Values{"sort": {"is_active,id,desc"}}, "", "is_active ASC, id DESC"},
+	}
+	byPath := map[string]resource{}
+	for _, r := range resources {
+		byPath[r.path] = r
+	}
+	for _, c := range cases {
+		t.Run(c.res+"?"+c.query.Encode(), func(t *testing.T) {
+			res := byPath[c.res]
+			rows := getList(t, res.path, c.query)
+			assertIDs(t, ids(rows), res.oracle(t, c.where, c.orderBy, pageSize+1))
+		})
+	}
+
+	t.Run("too many filters", func(t *testing.T) {
+		filters := make([]string, 11)
+		for i := range filters {
+			filters[i] = "season,gte,2000"
+		}
+		assertError(t, "/races", url.Values{"filter": filters}, http.StatusBadRequest)
+	})
 }
 
 func TestHiddenArticles(t *testing.T) {

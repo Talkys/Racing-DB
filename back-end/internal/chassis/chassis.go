@@ -43,7 +43,11 @@ var Resource = crud.Resource[Chassis]{
 			"weight_kg":    queries.DecimalFilter("weight_kg"),
 		},
 		AllowedSorts: map[string]string{
-			"name": "name",
+			"manufacturer": "manufacturer",
+			"name":         "name",
+			"material":     "material",
+			"wheelbase_mm": "wheelbase_mm",
+			"weight_kg":    "weight_kg",
 		},
 	},
 }
@@ -56,8 +60,8 @@ var Resource = crud.Resource[Chassis]{
 // @ID search-chassis
 // @Produce json
 // @Param page query int false "Page number for pagination (default: 1)"
-// @Param filter query string false "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)"
-// @Param sort query string false "Sort expression in format: column,direction (e.g. name,asc)"
+// @Param filter query []string false "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters." collectionFormat(multi)
+// @Param sort query []string false "Comma-separated columns, each optionally followed by asc or desc (e.g. name,desc), in priority order; may be repeated. Sortable: manufacturer, name, material, wheelbase_mm, weight_kg" collectionFormat(multi)
 // @Success 200 {array} Chassis "List of matching chassis"
 // @Failure 400 {object} routes.ErrorResponse "Invalid page, filter or sort"
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"

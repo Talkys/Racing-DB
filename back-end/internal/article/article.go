@@ -46,6 +46,8 @@ var Resource = crud.Resource[Article]{
 		AllowedSorts: map[string]string{
 			"published_at": "published_at",
 			"created_at":   "created_at",
+			"entity_type":  "entity_type",
+			"kind":         "kind",
 		},
 	},
 }
@@ -58,8 +60,8 @@ var Resource = crud.Resource[Article]{
 // @ID search-articles
 // @Produce json
 // @Param page query int false "Page number for pagination (default: 1)"
-// @Param filter query string false "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)"
-// @Param sort query string false "Sort expression in format: column,direction (e.g. published_at,asc)"
+// @Param filter query []string false "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters." collectionFormat(multi)
+// @Param sort query []string false "Comma-separated columns, each optionally followed by asc or desc (e.g. published_at,desc), in priority order; may be repeated. Sortable: published_at, created_at, entity_type, kind" collectionFormat(multi)
 // @Success 200 {array} Article "List of matching articles"
 // @Failure 400 {object} routes.ErrorResponse "Invalid page, filter or sort"
 // @Failure 500 {object} routes.ErrorResponse "Internal Server Error"

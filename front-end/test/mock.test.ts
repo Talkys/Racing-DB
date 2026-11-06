@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { ApiError } from '../src/api/client.ts'
 import { mockGet, mockSearch, mockSearchArticles } from '../src/api/mock.ts'
 import { mockData } from '../src/api/mock-data.ts'
 
@@ -48,8 +49,55 @@ describe('mockSearch filters', () => {
     expect(mockSearch('drivers', { filter: 'last_name,eq,a,b' })).toEqual([])
   })
 
-  test('an unknown operator throws', () => {
-    expect(() => mockSearch('races', { filter: 'season,like,2026' })).toThrow("invalid operator 'like'")
+  test('several filters are AND-ed ("F1 races in 2026")', () => {
+    const rows = mockSearch('races', { filter: ['category_id,eq,f1', 'season,eq,2026'] })
+    expect(ids(rows)).toContain(MONACO)
+    expect(rows.every((r) => r.category_id === 'f1' && r.season === 2026)).toBe(true)
+    expect(rows.length).toBeLessThan(mockSearch('races', { filter: 'category_id,eq,f1' }).length)
+    expect(mockSearch('races', { filter: ['category_id,eq,f1', 'category_id,eq,wec'] })).toEqual([])
+  })
+
+  test('values are typed like the back end parses them', () => {
+    expect(mockSearch('categories', { filter: 'is_active,eq,TRUE' }).length).toBe(mockSearch('categories', { filter: 'is_active,eq,1' }).length)
+    expect(ids(mockSearch('drivers', { filter: `id,eq,${VER.toUpperCase()}` }))).toEqual([VER])
+    expect(() => mockSearch('races', { filter: 'season,eq,2026.0' })).toThrow("invalid value '2026.0'") // ints take no decimals
+  })
+
+  test('NULL columns never match', () => {
+    const teams = mockSearch('teams', { filter: 'founded_year,gte,0' })
+    expect(teams.every((t) => t.founded_year != null)).toBe(true)
+  })
+})
+
+describe('mockSearch rejects what the back end rejects with 400', () => {
+  const rejects = (query: Parameters<typeof mockSearch>[1], message: string) => {
+    let error: unknown
+    try {
+      mockSearch('races', query)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).status).toBe(400)
+    expect((error as ApiError).message).toContain(message)
+  }
+
+  test('bad filters', () => {
+    rejects({ filter: 'season,like,2026' }, "invalid operator 'like'")
+    rejects({ filter: 'season,ilike,2026' }, "invalid operator 'ilike'")
+    rejects({ filter: 'nope,eq,1' }, 'invalid filter column: nope')
+    rejects({ filter: 'season' }, 'invalid filter')
+    rejects({ filter: 'season,eq,abc' }, "invalid value 'abc'")
+    rejects({ filter: `winner_id,in,${VER}|nope` }, 'invalid value')
+    rejects({ filter: ['category_id,eq,f1', 'season,eq,x'] }, "invalid value 'x'")
+    rejects({ filter: Array(11).fill('season,gte,2000') }, 'too many filters')
+  })
+
+  test('bad sorts', () => {
+    rejects({ sort: 'winner_id' }, 'invalid sort column or direction: winner_id')
+    rejects({ sort: 'name,sideways' }, 'sideways')
+    rejects({ sort: 'season,season,desc' }, 'duplicate sort column')
+    rejects({ sort: ['season', 'season,desc'] }, 'duplicate sort column')
   })
 })
 
@@ -70,6 +118,21 @@ describe('mockSearch ordering and paging', () => {
     expect(asc).toEqual([...asc].sort((a, b) => a.localeCompare(b)))
     const desc = mockSearch('drivers', { sort: 'last_name,DESC' }).map((d) => d.last_name)
     expect(desc).toEqual([...desc].sort((a, b) => b.localeCompare(a)))
+  })
+
+  test('several sorts, comma-separated or repeated', () => {
+    const comma = mockSearch('races', { sort: 'category_id,season,desc,round' })
+    const expected = [...comma].sort((a, b) => a.category_id.localeCompare(b.category_id) || b.season - a.season || a.round - b.round)
+    expect(comma).toEqual(expected)
+    expect(mockSearch('races', { sort: ['category_id', 'season,desc', 'round,asc'] })).toEqual(comma)
+  })
+
+  test('NULLs sort last ascending and first descending, like Postgres', () => {
+    const asc = mockSearch('teams', { sort: 'founded_year' }).map((t) => t.founded_year)
+    const desc = mockSearch('teams', { sort: 'founded_year,desc' }).map((t) => t.founded_year)
+    expect(asc).toContain(null)
+    expect(asc.at(-1)).toBeNull()
+    expect(desc[0]).toBeNull()
   })
 
   test('numbers sort numerically', () => {

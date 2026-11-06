@@ -174,6 +174,12 @@ const TEAM_PARTS: CarParts[] = [
   },
 ]
 
+// A live blog on the 2025 Monaco GP: more articles about one entity than fit on a page (25), so the race page has to
+// follow the pagination. Dated 2025, so the newest-first article list still opens with the spec's articles.
+const RACE_MONACO_2025 = seq(77, 4)
+const LIVE_UPDATES = 27
+const liveAt = (i: number) => `2025-05-25T13:${String(i * 2).padStart(2, '0')}:00Z`
+
 const text = (n: number, article: number, language: string, title: string, summary: string | null, body_md: string, at: string) => ({
   id: seq(76, n), article_id: ARTICLE[article - 1], language, title, summary, body_md, created_at: at, updated_at: at,
 })
@@ -298,6 +304,9 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
     { id: ARTICLE[4], entity_type: 'driver', entity_id: DRIVER.ver, kind: 'overview', published_at: '2026-03-01T00:00:00Z', created_at: created },
     // Must stay future-dated: mock.test.ts and back-end/scripts/smoke.sh check that it is never served. Don't "fix" it to a near date.
     { id: ARTICLE[5], entity_type: 'driver', entity_id: DRIVER.bag, kind: 'preview', published_at: '2099-01-01T00:00:00Z', created_at: created },
+    ...Array.from({ length: LIVE_UPDATES }, (_, i) => ({
+      id: seq(75, 101 + i), entity_type: 'race' as const, entity_id: RACE_MONACO_2025, kind: 'live', published_at: liveAt(i), created_at: created,
+    })),
   ],
   'article-texts': [
     text(1, 1, 'en', 'Verstappen masters Monaco', 'A controlled drive from pole.',
@@ -314,5 +323,9 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
     text(6, 5, 'en', 'Max Verstappen', 'Four-time world champion and Red Bull team leader.',
       '# Max Verstappen\n\nDutch driver, champion from 2021 to 2024.\n', '2026-03-01T00:00:00Z'),
     text(7, 6, 'en', 'Bagnaia season preview (scheduled)', null, 'Future-dated. Must never be served.', '2026-03-01T00:00:00Z'),
+    ...Array.from({ length: LIVE_UPDATES }, (_, i) => ({
+      id: seq(76, 101 + i), article_id: seq(75, 101 + i), language: 'en', title: `Monaco 2025 live, update ${i + 1}`, summary: null,
+      body_md: `Lap-by-lap coverage from Monte Carlo, update ${i + 1}.\n`, created_at: liveAt(i), updated_at: liveAt(i),
+    })),
   ],
 }

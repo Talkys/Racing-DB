@@ -69,14 +69,24 @@ type EntitySearchConfig struct {
 	PageSize       int
 }
 
-type SearchCriteria struct {
-	Page      int
-	FilterCol string
-	FilterOp  string
-	FilterVal string
-	SortCol   string
-	SortDir   string
+// Filter is one `column,operator,value` expression.
+type Filter struct {
+	Col, Op, Val string
 }
+
+// Sort is one ordering column; Dir is "", "asc" or "desc" as the client wrote it.
+type Sort struct {
+	Col, Dir string
+}
+
+type SearchCriteria struct {
+	Page    int
+	Filters []Filter // AND-ed together
+	Sorts   []Sort   // in priority order
+}
+
+// maxFilters bounds the filters of one request; more than a handful is never a real search.
+const maxFilters = 10
 
 // ParsePage reads the 1-based `page` param, defaulting to 1.
 func ParsePage(query url.Values) (int, error) {
@@ -91,61 +101,72 @@ func ParsePage(query url.Values) (int, error) {
 	return page, nil
 }
 
+// BuildCriteriaFromURL reads `page`, any number of `filter=column,operator,value` params, and `sort` as a
+// comma-separated list of columns, each optionally followed by its direction (`season,desc,name`), given
+// once or repeated (`sort=season,desc&sort=name`).
 func BuildCriteriaFromURL(query url.Values) (*SearchCriteria, error) {
 	page, err := ParsePage(query)
 	if err != nil {
 		return nil, err
 	}
 
-	var filterCol, filterOp, filterVal string
-	if filterBlock := query.Get("filter"); filterBlock != "" {
-		parts := strings.SplitN(filterBlock, ",", 3)
+	filterBlocks := query["filter"]
+	if len(filterBlocks) > maxFilters {
+		return nil, apperror.BadRequest("too many filters: %d (at most %d)", len(filterBlocks), maxFilters)
+	}
+	filters := make([]Filter, 0, len(filterBlocks))
+	for _, block := range filterBlocks {
+		parts := strings.SplitN(block, ",", 3)
 		if len(parts) != 3 {
-			return nil, apperror.BadRequest("invalid filter: '%s' (expected column,operator,value)", filterBlock)
+			return nil, apperror.BadRequest("invalid filter: '%s' (expected column,operator,value)", block)
 		}
-		filterCol, filterOp, filterVal = parts[0], parts[1], parts[2]
+		filters = append(filters, Filter{Col: parts[0], Op: parts[1], Val: parts[2]})
 	}
 
-	// strings.Cut handles missing commas safely out-of-the-box
-	sortCol, sortDir, _ := strings.Cut(query.Get("sort"), ",")
+	var sorts []Sort
+	for _, block := range query["sort"] {
+		for _, token := range strings.Split(block, ",") {
+			switch lower := strings.ToLower(token); {
+			case token == "":
+				// tolerate "name," and empty params
+			case (lower == "asc" || lower == "desc") && len(sorts) > 0 && sorts[len(sorts)-1].Dir == "":
+				sorts[len(sorts)-1].Dir = lower
+			default:
+				sorts = append(sorts, Sort{Col: token})
+			}
+		}
+	}
 
-	return &SearchCriteria{
-		Page:      page,
-		FilterCol: filterCol,
-		FilterOp:  filterOp,
-		FilterVal: filterVal,
-		SortCol:   sortCol,
-		SortDir:   sortDir,
-	}, nil
+	return &SearchCriteria{Page: page, Filters: filters, Sorts: sorts}, nil
 }
 
 func BuildSearchQuery(cols []string, table string, cfg EntitySearchConfig, sc SearchCriteria) (string, []any, error) {
 	var queryBuilder strings.Builder
-	args := make([]any, 0, 1)
-	conditions := make([]string, 0, 2)
+	args := make([]any, 0, len(sc.Filters))
+	conditions := make([]string, 0, len(sc.Filters)+1)
 
 	if cfg.BaseCondition != "" {
 		conditions = append(conditions, "("+cfg.BaseCondition+")")
 	}
 
-	if sc.FilterCol != "" {
-		filterCfg, exists := cfg.AllowedFilters[sc.FilterCol]
+	for _, f := range sc.Filters {
+		filterCfg, exists := cfg.AllowedFilters[f.Col]
 		if !exists {
-			return "", nil, apperror.BadRequest("invalid filter column: %s", sc.FilterCol)
+			return "", nil, apperror.BadRequest("invalid filter column: %s", f.Col)
 		}
 
-		sqlOp, opExists := filterCfg.AllowedOps[sc.FilterOp]
+		sqlOp, opExists := filterCfg.AllowedOps[f.Op]
 		if !opExists {
-			return "", nil, apperror.BadRequest("invalid operator '%s' for column '%s'", sc.FilterOp, sc.FilterCol)
+			return "", nil, apperror.BadRequest("invalid operator '%s' for column '%s'", f.Op, f.Col)
 		}
 
-		val, err := parseFilterValue(filterCfg, sc.FilterOp, sc.FilterVal)
+		val, err := parseFilterValue(filterCfg, f.Op, f.Val)
 		if err != nil {
-			return "", nil, apperror.BadRequest("invalid value '%s' for column '%s'", sc.FilterVal, sc.FilterCol)
+			return "", nil, apperror.BadRequest("invalid value '%s' for column '%s'", f.Val, f.Col)
 		}
 
 		args = append(args, val)
-		if sc.FilterOp == constants.In {
+		if f.Op == constants.In {
 			conditions = append(conditions, fmt.Sprintf("%s %s($%d)", filterCfg.DBColumn, sqlOp, len(args)))
 		} else {
 			conditions = append(conditions, fmt.Sprintf("%s %s $%d", filterCfg.DBColumn, sqlOp, len(args)))
@@ -186,29 +207,33 @@ func BuildGetQuery(cols []string, table string, cfg EntitySearchConfig) string {
 }
 
 func buildOrderBy(cfg EntitySearchConfig, sc SearchCriteria) (string, error) {
-	if sc.SortCol == "" {
+	if len(sc.Sorts) == 0 {
 		return cfg.DefaultOrder, nil
 	}
 
-	sortCol, exists := cfg.AllowedSorts[sc.SortCol]
-	if !exists {
-		return "", apperror.BadRequest("invalid sort column: %s", sc.SortCol)
+	terms := make([]string, 0, len(sc.Sorts)+1)
+	seen := make(map[string]bool, len(sc.Sorts))
+	for _, s := range sc.Sorts {
+		sortCol, exists := cfg.AllowedSorts[s.Col]
+		if !exists {
+			return "", apperror.BadRequest("invalid sort column or direction: %s", s.Col)
+		}
+		if seen[sortCol] {
+			return "", apperror.BadRequest("duplicate sort column: %s", s.Col)
+		}
+		seen[sortCol] = true
+
+		sortDir := constants.Ascendent
+		if s.Dir == "desc" {
+			sortDir = constants.Descendent
+		}
+		terms = append(terms, sortCol+" "+sortDir)
 	}
 
-	var sortDir string
-	switch strings.ToLower(sc.SortDir) {
-	case "", "asc":
-		sortDir = constants.Ascendent
-	case "desc":
-		sortDir = constants.Descendent
-	default:
-		return "", apperror.BadRequest("invalid sort direction: %s", sc.SortDir)
+	if !seen[tiebreaker] {
+		terms = append(terms, tiebreaker+" "+constants.Ascendent)
 	}
-
-	if sortCol == tiebreaker {
-		return sortCol + " " + sortDir, nil
-	}
-	return fmt.Sprintf("%s %s, %s %s", sortCol, sortDir, tiebreaker, constants.Ascendent), nil
+	return strings.Join(terms, ", "), nil
 }
 
 func parseFilterValue(f AllowedFilter, op string, raw string) (any, error) {

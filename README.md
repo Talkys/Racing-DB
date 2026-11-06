@@ -71,6 +71,10 @@ bun run dev
 | `VITE_API_TARGET` | `http://localhost:5000` | Where the dev server proxies `/api` |
 | `VITE_API_MOCK` | unset | `true` serves everything from `src/api/mock-data.ts`, no back end needed |
 
+Mock mode is for demos and UI work only. It follows the API (filters, sorts, paging, 400 on bad input), but its
+article search is only an approximation of the back end's `websearch_to_tsquery` search, and the back end, covered
+by the Go integration tests, is the reference.
+
 - Tests: `bun test` (suites in `test/`)
 - Lint: `bun run lint` ([Biome](https://biomejs.dev), lint and import order only; formatting is by hand)
 - Type check, including the tests: `bun run typecheck`
@@ -81,8 +85,10 @@ All routes are `GET` under `/api/1`: `categories`, `circuits`, `drivers`, `races
 `cars`, `articles`, `article-texts`, each as a list (`/races`) and by id (`/races/{id}`; categories use their slug).
 
 Lists take `page` (25 rows per page; one extra row is returned when a next page exists),
-`filter=column,operator,value` (`eq neq gt gte lt lte ilike in`; `in` takes `|`-separated values) and
-`sort=column,direction`. Errors are JSON: `{"status": 400, "error": "..."}`. Draft and future-dated articles,
+`filter=column,operator,value` (`eq neq gt gte lt lte ilike in`; `in` takes `|`-separated values; repeat it, up to
+10 times, to AND filters: `?filter=category_id,eq,f1&filter=season,eq,2026`) and `sort`, a comma-separated list of
+columns each optionally followed by `asc`/`desc` (`?sort=season,desc,round`, or repeated: `?sort=season,desc&sort=round`);
+`id` breaks the remaining ties. Swagger lists each resource's filterable and sortable columns. Errors are JSON: `{"status": 400, "error": "..."}`. Draft and future-dated articles,
 and their texts, are never served.
 
 `/articles/search?q=&lang=&page=` searches article texts: whole words, case-insensitive, no stemming

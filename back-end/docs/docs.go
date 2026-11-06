@@ -34,14 +34,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. title,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. title,desc), in priority order; may be repeated. Sortable: title, language",
                         "name": "sort",
                         "in": "query"
                     }
@@ -137,14 +145,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. published_at,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. published_at,desc), in priority order; may be repeated. Sortable: published_at, created_at, entity_type, kind",
                         "name": "sort",
                         "in": "query"
                     }
@@ -296,14 +312,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. name,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. name,desc), in priority order; may be repeated. Sortable: name, season, category_id",
                         "name": "sort",
                         "in": "query"
                     }
@@ -399,14 +423,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. name,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. name,desc), in priority order; may be repeated. Sortable: id, name, is_active",
                         "name": "sort",
                         "in": "query"
                     }
@@ -502,14 +534,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. name,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. name,desc), in priority order; may be repeated. Sortable: manufacturer, name, material, wheelbase_mm, weight_kg",
                         "name": "sort",
                         "in": "query"
                     }
@@ -605,14 +645,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. name,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. name,desc), in priority order; may be repeated. Sortable: name, location, country, length_km",
                         "name": "sort",
                         "in": "query"
                     }
@@ -708,14 +756,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. last_name,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. last_name,desc), in priority order; may be repeated. Sortable: last_name, first_name, code, nationality",
                         "name": "sort",
                         "in": "query"
                     }
@@ -811,14 +867,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. name,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. name,desc), in priority order; may be repeated. Sortable: manufacturer, name, configuration, displacement_cc, cylinders, aspiration, power_kw",
                         "name": "sort",
                         "in": "query"
                     }
@@ -914,14 +978,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. race_date,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. race_date,desc), in priority order; may be repeated. Sortable: race_date, name, category_id, season, round",
                         "name": "sort",
                         "in": "query"
                     }
@@ -1017,14 +1089,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Filter expression in format: column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter expression column,operator,value (operators: eq neq gt gte lt lte ilike in; in takes values separated by |). Repeat it to AND several filters.",
                         "name": "filter",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sort expression in format: column,direction (e.g. name,asc)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Comma-separated columns, each optionally followed by asc or desc (e.g. name,desc), in priority order; may be repeated. Sortable: name, short_name, country, founded_year",
                         "name": "sort",
                         "in": "query"
                     }

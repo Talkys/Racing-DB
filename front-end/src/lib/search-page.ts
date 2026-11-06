@@ -8,6 +8,8 @@ export { dash } from './format.ts'
 // this only reads the URL, fetches one page of data and copies it into that HTML.
 //
 // URL params: col, op, q (filter) · sort, dir (ordering) · page.
+// A sort header is <a data-sort="column">, plus data-then="..." for the columns that break its ties
+// (sent after it, e.g. season then round).
 
 export interface SearchPageConfig<P extends EntityPath> {
   path: P
@@ -49,11 +51,12 @@ export async function initSearchPage<P extends EntityPath>(config: SearchPageCon
   const col = params.get('col')
   const q = params.get('q')
   const sort = params.get('sort')
+  const then = sort ? document.querySelector<HTMLElement>(`[data-sort="${CSS.escape(sort)}"]`)?.dataset.then : undefined
   const page = Math.max(1, Number(params.get('page')) || 1)
   const query: Query = {
     page,
     filter: col && q ? `${col},${params.get('op') ?? 'ilike'},${q}` : undefined,
-    sort: sort ? `${sort},${params.get('dir') === 'desc' ? 'desc' : 'asc'}` : undefined,
+    sort: sort ? [`${sort},${params.get('dir') === 'desc' ? 'desc' : 'asc'}`, ...(then ? [then] : [])] : undefined,
   }
 
   document.querySelectorAll<HTMLAnchorElement>('[data-sort]').forEach((link) => {

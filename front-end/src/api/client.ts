@@ -21,11 +21,17 @@ export class ApiError extends Error {
 
 export interface Query {
   page?: number
-  /** `column,operator,value`, e.g. `language,eq,en` (operators: eq neq gt gte lt lte ilike in; `in` values are `|` separated). */
-  filter?: string
-  /** `column,direction`, e.g. `race_date,desc`. */
-  sort?: string
+  /**
+   * `column,operator,value`, e.g. `language,eq,en` (operators: eq neq gt gte lt lte ilike in; `in` values are `|`
+   * separated). Several filters are AND-ed.
+   */
+  filter?: string | string[]
+  /** Columns in priority order, each optionally followed by its direction: `season,desc,name` or `['season,desc', 'name']`. */
+  sort?: string | string[]
 }
+
+/** The back end caps `in` lists at this many values. */
+const MAX_IN_VALUES = 100
 
 export interface Page<T> {
   items: T[]
@@ -39,8 +45,8 @@ function toPage<T>(rows: T[]): Page<T> {
 function buildUrl(path: EntityPath, query: Query): string {
   const params = new URLSearchParams()
   if (query.page) params.set('page', String(query.page))
-  if (query.filter) params.set('filter', query.filter)
-  if (query.sort) params.set('sort', query.sort)
+  for (const filter of [query.filter ?? []].flat()) params.append('filter', filter)
+  for (const sort of [query.sort ?? []].flat()) params.append('sort', sort)
   const qs = params.toString()
   return `${BASE_URL}/${path}${qs ? `?${qs}` : ''}`
 }
@@ -83,20 +89,31 @@ export async function get<P extends EntityPath>(path: P, id: string): Promise<En
   return (await res.json()) as EntityMap[P]
 }
 
-/**
- * Fetches the given ids of one entity in a single request (`id,in,a|b|c`), keyed by id.
- * Missing ids are simply absent from the map. Meant for the related rows of one page, so at most 100 ids.
- */
-export async function getMany<P extends EntityPath>(path: P, ids: (string | null | undefined)[]): Promise<Map<string, EntityMap[P]>> {
-  const unique = [...new Set(ids.filter((id): id is string => !!id))]
-  if (unique.length === 0) return new Map()
+/** Every row matching the query, following the pages. Meant for lists known to stay small. */
+export async function searchAll<P extends EntityPath>(path: P, query: Omit<Query, 'page'> = {}): Promise<EntityMap[P][]> {
   const rows: EntityMap[P][] = []
-  // Pages hold PAGE_SIZE rows, so a long id list may need more than one.
   for (let page = 1; ; page++) {
-    const result = await search(path, { filter: `id,in,${unique.join('|')}`, page })
+    const result = await search(path, { ...query, page })
     rows.push(...result.items)
-    if (!result.hasNext) break
+    if (!result.hasNext) return rows
   }
+}
+
+/**
+ * Every row whose `column` is one of `values` (`column,in,a|b|c`), in as few requests as the back end allows:
+ * one per 100 values, plus one per extra page of results.
+ */
+export async function searchIn<P extends EntityPath>(path: P, column: string, values: (string | null | undefined)[]): Promise<EntityMap[P][]> {
+  const unique = [...new Set(values.filter((v): v is string => !!v))]
+  const chunks: string[][] = []
+  for (let i = 0; i < unique.length; i += MAX_IN_VALUES) chunks.push(unique.slice(i, i + MAX_IN_VALUES))
+  const results = await Promise.all(chunks.map((chunk) => searchAll(path, { filter: `${column},in,${chunk.join('|')}` })))
+  return results.flat()
+}
+
+/** Fetches the given ids of one entity, keyed by id. Missing ids are simply absent from the map. */
+export async function getMany<P extends EntityPath>(path: P, ids: (string | null | undefined)[]): Promise<Map<string, EntityMap[P]>> {
+  const rows = await searchIn(path, 'id', ids)
   return new Map(rows.map((row) => [(row as { id: string }).id, row]))
 }
 

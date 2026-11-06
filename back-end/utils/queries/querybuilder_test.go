@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -21,7 +22,7 @@ var testCfg = EntitySearchConfig{
 		"season": IntFilter("season"),
 		"active": BoolFilter("is_active"),
 	},
-	AllowedSorts: map[string]string{"name": "name", "id": "id"},
+	AllowedSorts: map[string]string{"name": "name", "id": "id", "season": "season"},
 }
 
 var testCols = []string{"id", "name"}
@@ -100,6 +101,36 @@ func TestBuildSearchQuery(t *testing.T) {
 			wantArgs:  []any{},
 		},
 		{
+			name:      "repeated filters are AND-ed in order",
+			rawQuery:  "filter=name,eq,Monaco&filter=season,gte,2020&filter=season,lte,2026",
+			wantQuery: "select id, name from races where (visible) and name = $1 and season >= $2 and season <= $3 order by race_date DESC, id ASC limit 26 offset 0",
+			wantArgs:  []any{"Monaco", int64(2020), int64(2026)},
+		},
+		{
+			name:      "comma-separated sorts with optional directions",
+			rawQuery:  "sort=season,DESC,name",
+			wantQuery: "select id, name from races where (visible) order by season DESC, name ASC, id ASC limit 26 offset 0",
+			wantArgs:  []any{},
+		},
+		{
+			name:      "repeated sort params",
+			rawQuery:  "sort=season&sort=name,desc",
+			wantQuery: "select id, name from races where (visible) order by season ASC, name DESC, id ASC limit 26 offset 0",
+			wantArgs:  []any{},
+		},
+		{
+			name:      "an explicit id sort replaces the tiebreaker",
+			rawQuery:  "sort=season,id,desc",
+			wantQuery: "select id, name from races where (visible) order by season ASC, id DESC limit 26 offset 0",
+			wantArgs:  []any{},
+		},
+		{
+			name:      "trailing comma is ignored",
+			rawQuery:  "sort=name,",
+			wantQuery: "select id, name from races where (visible) order by name ASC, id ASC limit 26 offset 0",
+			wantArgs:  []any{},
+		},
+		{
 			name:      "sorting by id needs no tiebreaker",
 			rawQuery:  "sort=id",
 			wantQuery: "select id, name from races where (visible) order by id ASC limit 26 offset 0",
@@ -135,8 +166,16 @@ func TestBuildSearchQueryRejectsBadInput(t *testing.T) {
 		"filter=active,eq,maybe",
 		"filter=id,eq,not-a-uuid",
 		"filter=id,in,b11a43a8-4e36-47a8-8e68-301fc1cae6ef|nope",
-		"sort=season",
+		"filter=name,eq,a&filter=season,eq,abc", // every filter is checked, not only the first
+		"filter=name,eq,a&filter=nope,eq,1",
+		"filter=name&filter=season,eq,1",
+		strings.TrimPrefix(strings.Repeat("&filter=name,eq,a", maxFilters+1), "&"),
+		"sort=round",
 		"sort=name,sideways",
+		"sort=desc",
+		"sort=name,asc,desc",
+		"sort=name,season,name",
+		"sort=name&sort=name,desc",
 	} {
 		t.Run(rawQuery, func(t *testing.T) {
 			_, _, err := build(t, rawQuery)
