@@ -8,6 +8,7 @@ import (
 	"backend/internal/category"
 	"backend/internal/chassis"
 	"backend/internal/circuit"
+	"backend/internal/crud"
 	"backend/internal/driver"
 	"backend/internal/engine"
 	"backend/internal/race"
@@ -109,39 +110,22 @@ func run(log *slog.Logger) error {
 func newHandler(log *slog.Logger, db *sql.DB) http.Handler {
 	mux := http.NewServeMux()
 
-	// REGISTER HANDLERS HERE (MAYBE THERE'S A WAY TO DO BETTER)
-	categoryHandler := category.NewCategoryHandler(db)
-	categoryHandler.RegisterRoutes(mux)
-
-	circuitHandler := circuit.NewCircuitHandler(db)
-	circuitHandler.RegisterRoutes(mux)
-
-	driverHandler := driver.NewDriverHandler(db)
-	driverHandler.RegisterRoutes(mux)
-
-	raceHandler := race.NewRaceHandler(db)
-	raceHandler.RegisterRoutes(mux)
-
-	teamHandler := team.NewTeamHandler(db)
-	teamHandler.RegisterRoutes(mux)
-
-	engineHandler := engine.NewEngineHandler(db)
-	engineHandler.RegisterRoutes(mux)
-
-	chassisHandler := chassis.NewChassisHandler(db)
-	chassisHandler.RegisterRoutes(mux)
-
-	carHandler := car.NewCarHandler(db)
-	carHandler.RegisterRoutes(mux)
-
-	articleHandler := article.NewArticleHandler(db)
-	articleHandler.RegisterRoutes(mux)
-
-	articletextHandler := articletext.NewArticleTextHandler(db)
-	articletextHandler.RegisterRoutes(mux)
-
-	articlesearchHandler := articlesearch.NewArticleSearchHandler(db)
-	articlesearchHandler.RegisterRoutes(mux)
+	handlers := []interface{ RegisterRoutes(*http.ServeMux) }{
+		crud.NewHandler(db, category.Resource),
+		crud.NewHandler(db, circuit.Resource),
+		crud.NewHandler(db, driver.Resource),
+		crud.NewHandler(db, race.Resource),
+		crud.NewHandler(db, team.Resource),
+		crud.NewHandler(db, engine.Resource),
+		crud.NewHandler(db, chassis.Resource),
+		crud.NewHandler(db, car.Resource),
+		crud.NewHandler(db, article.Resource),
+		crud.NewHandler(db, articletext.Resource),
+		articlesearch.NewArticleSearchHandler(db),
+	}
+	for _, h := range handlers {
+		h.RegisterRoutes(mux)
+	}
 
 	// Anything under the API prefix that no handler claimed gets a JSON 404 instead of the mux's plain text.
 	mux.HandleFunc(constants.BaseApiUrl_V1+"/", routes.NotFound)
