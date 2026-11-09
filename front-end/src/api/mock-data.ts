@@ -1,10 +1,11 @@
-import type { CarParts, EntityMap, EntityPath, RacePayload } from './types.ts'
+import type { CarParts, ComputedFields, EntityMap, EntityPath, RacePayload } from './types.ts'
 
 // Stand-in data in the Go back end's JSON shape. Categories come from ../init.sql; everything else is the
 // spec's seed (spec5.md §8.2), which covers every case the UI must handle: the three race payload types,
 // a race-less winner, nullable entity fields, multi-language articles, a draft and an article with no English text.
 // Additions beyond the spec: a driver article (a5) for the home page's featured box, a future-dated article (a6)
-// that must stay hidden, and enough extra drivers, races and cars to need a second page (25 rows per page).
+// that must stay hidden, enough extra drivers, races and cars to need a second page (25 rows per page), and one race
+// and one car whose JSONB breaks its contract (RACE_BROKEN, CAR_BROKEN).
 // The extra races are a 2025 season, so the spec's 2026 rows stay on top of the newest-first race list.
 // ../../../seed.sql is generated from this file, so both stay identical.
 
@@ -59,6 +60,7 @@ const MORE_CIRCUITS: [string, string, string, string, number][] = [
   ['losail', 'Lusail International Circuit', 'Lusail', 'Qatar', 5.38], ['jerez', 'Circuito de Jerez - Ángel Nieto', 'Jerez de la Frontera', 'Spain', 4.423],
   ['assen', 'TT Circuit Assen', 'Assen', 'Netherlands', 4.542], ['motegi', 'Mobility Resort Motegi', 'Motegi', 'Japan', 4.801],
   ['phillipisland', 'Phillip Island Grand Prix Circuit', 'Phillip Island', 'Australia', 4.448], ['fuji', 'Fuji Speedway', 'Oyama', 'Japan', 4.563],
+  ['imola', 'Autodromo Enzo e Dino Ferrari', 'Imola', 'Italy', 4.909],
 ]
 const CIRCUIT_BY_KEY: Record<string, string> = {
   monaco: CIRCUIT.monaco, mugello: CIRCUIT.mugello, sarthe: CIRCUIT.sarthe,
@@ -108,6 +110,12 @@ const MORE_RACES = [
     full_course_yellow_count: fcy, red_flag_duration_minutes: 0,
   } })),
 ].map((r, i) => race2025(i + 1, r.category_id, r.round, r.name, r.circuit, r.date, r.winner, r.payload))
+
+// Rows as a broken ETL run could store them: an f1 race with an empty payload and a car with half its parts. The API
+// returns them flagged (payload_valid/parts_valid false) and the race/car pages fall back to the raw-JSON panel.
+// The Go integration tests and front-end tests rely on both staying invalid.
+const RACE_BROKEN = seq(77, 90)
+const CAR_BROKEN = seq(74, 90)
 
 // Older seasons for every team, plus 2026 cars for the extra teams. Each car reuses its team's engine and chassis:
 // enough for paging, not a technical history. team index, category, season, name.
@@ -184,7 +192,8 @@ const text = (n: number, article: number, language: string, title: string, summa
   id: seq(76, n), article_id: ARTICLE[article - 1], language, title, summary, body_md, created_at: at, updated_at: at,
 })
 
-export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
+/** Rows as stored: what the back end computes on read (payload_valid, ...) is added by mock.ts. */
+export const mockData: { [P in EntityPath]: Omit<EntityMap[P], ComputedFields>[] } = {
   categories: [
     { id: 'f1', name: 'Formula 1', description: 'The pinnacle of open-wheel single-seater motorsport, featuring hybrid power units and world-renowned constructors.', is_active: true },
     { id: 'motogp', name: 'MotoGP', description: 'The premier class of motorcycle road racing, showcasing high-performance 1000cc prototype bikes.', is_active: true },
@@ -247,6 +256,12 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
       created_at: created,
     },
     ...MORE_RACES,
+    {
+      id: RACE_BROKEN, category_id: 'f1', circuit_id: CIRCUIT_BY_KEY.imola, winner_id: DRIVER.ver,
+      name: 'Emilia Romagna Grand Prix', season: 2025, round: 7, race_date: '2025-05-18T00:00:00Z',
+      payload: {},
+      created_at: created,
+    },
   ],
   teams: [
     { id: TEAM[0], name: 'Oracle Red Bull Racing', short_name: 'Red Bull', country: 'United Kingdom', founded_year: 2005, created_at: created },
@@ -295,6 +310,11 @@ export const mockData: { [P in EntityPath]: EntityMap[P][] } = {
       id: seq(74, i + 4), category_id, team_id: TEAM[team], engine_id: ENGINE[team], chassis_id: CHASSIS[team], name, season,
       parts: TEAM_PARTS[team], created_at: created,
     })),
+    {
+      id: CAR_BROKEN, category_id: 'f1', team_id: TEAM[0], engine_id: ENGINE[0], chassis_id: CHASSIS[0], name: 'RB18', season: 2022,
+      parts: { gearbox: { type: 'SEQUENTIAL' }, tyre_supplier: 'Pirelli' },
+      created_at: created,
+    },
   ],
   articles: [
     { id: ARTICLE[0], entity_type: 'race', entity_id: RACE.monaco, kind: 'report', published_at: '2026-05-25T12:00:00Z', created_at: created },

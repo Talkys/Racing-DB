@@ -15,6 +15,9 @@ ARTICLE_FUTURE=75000000-0000-4000-8000-000000000006
 UNKNOWN=00000000-0000-4000-8000-000000000099
 # 2025 Monaco GP: has more articles (a live blog) than fit on one page.
 MONACO_2025=77000000-0000-4000-8000-000000000004
+# Rows whose JSONB breaks its contract on purpose (mock-data.ts): served as stored and flagged.
+RACE_BROKEN=77000000-0000-4000-8000-000000000090
+CAR_BROKEN=74000000-0000-4000-8000-000000000090
 
 pass=0
 fail=0
@@ -62,6 +65,10 @@ check 200 "/categories/f1" '"name":"Formula 1"'
 check 200 "/categories/F1" '"id":"f1"'
 check 404 "/categories/xyz"
 check 200 "/cars/74000000-0000-4000-8000-000000000001" '"tyre_supplier":"Pirelli"'
+check 200 "/races/$MONACO" '"payload_valid":true' 'payload_errors'
+check 200 "/races/$RACE_BROKEN" '"payload_valid":false' '"payload":null'
+check 200 "/races/$RACE_BROKEN" '"payload_errors":["fastest_lap: missing"'
+check 200 "/cars/$CAR_BROKEN" '"parts_valid":false'
 check 404 "/nope" 'resource not found'
 
 # 6-7: articles hide drafts and future-dated ones, texts by article

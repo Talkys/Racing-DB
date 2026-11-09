@@ -35,8 +35,12 @@ export interface Race<TPayload = RacePayload> {
   season: number
   round: number
   race_date: string
+  /** As stored; check it with the guards in guards.ts before reading nested fields. */
   payload: TPayload
   created_at: string
+  /** False when the back end found that payload breaks its category's contract; payload_errors then says how. */
+  payload_valid: boolean
+  payload_errors?: string[]
 }
 
 // Category payload contracts (races.payload). Driver ids inside payloads are not foreign keys.
@@ -108,8 +112,12 @@ export interface Car {
   chassis_id: string
   name: string
   season: number
-  parts: CarParts
+  /** As stored; check it with hasValidParts (guards.ts) before reading nested fields. */
+  parts: CarParts | Record<string, unknown>
   created_at: string
+  /** False when the back end found that parts breaks the contract; parts_errors then says how. */
+  parts_valid: boolean
+  parts_errors?: string[]
 }
 
 /** cars.parts: same shape for every category. */
@@ -140,6 +148,9 @@ export interface ArticleText {
   created_at: string
   updated_at: string
 }
+
+/** Fields the back end computes on read (JSONB validation); they are not database columns. */
+export type ComputedFields = 'payload_valid' | 'payload_errors' | 'parts_valid' | 'parts_errors'
 
 /** Entity name -> model, keyed by the route segment under /api/1. */
 export interface EntityMap {

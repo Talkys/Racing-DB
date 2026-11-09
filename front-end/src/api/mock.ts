@@ -1,4 +1,5 @@
 import { ApiError, type Query } from './client.ts'
+import { isCarParts, PAYLOAD_CONTRACTS } from './guards.ts'
 import { mockData } from './mock-data.ts'
 import type { Article, ArticleSearchResult, ArticleText, EntityMap, EntityPath, PreviewSegment } from './types.ts'
 
@@ -120,10 +121,24 @@ function compare(a: unknown, b: unknown): number {
   return String(a).localeCompare(String(b))
 }
 
+/**
+ * Like the races/cars Check in the back end: flags JSONB that breaks its contract. The guards check shapes but not
+ * the back end's ranges, and give no list of problems, so payload_errors/parts_errors stay unset.
+ */
+const COMPUTED: Partial<Record<EntityPath, (row: Row) => Row>> = {
+  races: (row) => {
+    const contract = PAYLOAD_CONTRACTS[String(row.category_id)]
+    return { ...row, payload_valid: !contract || contract(row.payload) }
+  },
+  cars: (row) => ({ ...row, parts_valid: isCarParts(row.parts) }),
+}
+
 function rowsOf(path: EntityPath): Row[] {
   const rows = mockData[path] as unknown as Row[]
   const base = BASE_CONDITION[path]
-  return base ? rows.filter(base) : [...rows]
+  const computed = COMPUTED[path]
+  const visible = base ? rows.filter(base) : rows
+  return computed ? visible.map(computed) : [...visible]
 }
 
 /** One row test per filter, rejecting what BuildSearchQuery rejects. */

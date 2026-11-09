@@ -89,7 +89,7 @@
 
             <div class="box-title">Parts</div>
             <div class="box-content">
-                <dl class="kv" data-section="parts">
+                <dl class="kv" data-section="parts" data-show-if="partsValid" hidden>
                     <dt>Gearbox</dt><dd><span data-field="gearboxType"></span>, <span data-field="gearboxSpeeds"></span> speeds</dd>
                     <dt>Brakes</dt><dd>front <span data-field="brakesFront"></span> &middot; rear <span data-field="brakesRear"></span></dd>
                     <dt>Suspension</dt><dd>front <span data-field="suspensionFront"></span> &middot; rear <span data-field="suspensionRear"></span></dd>
@@ -98,6 +98,8 @@
                         <dt data-field="key"></dt><dd data-field="value"></dd>
                     </template>
                 </dl>
+                <p class="mt-0 mb-1.5 text-flame" data-show-if="partsNote" data-field="partsNote" hidden></p>
+                <pre class="m-0 whitespace-pre-wrap font-mono" data-show-if="rawParts" data-field="rawParts" hidden></pre>
             </div>
 
             <div class="box-title">Articles</div>

@@ -2,6 +2,7 @@ import { get } from '../api/client.ts'
 import { entityArticles } from '../lib/articles.ts'
 import { fill, fillList, section, showError } from '../lib/dom.ts'
 import { dash, formatEnum } from '../lib/format.ts'
+import { carPartsFields } from '../lib/payloads.ts'
 
 // car.html?id=<car id>
 
@@ -16,7 +17,8 @@ async function load(id: string): Promise<void> {
     get('chassis', car.chassis_id),
     entityArticles('car', car.id),
   ])
-  const { parts } = car
+
+  const parts = carPartsFields(car)
 
   document.title = `${car.name} (${car.season}) - RaceDB.org`
   fill(document.body, {
@@ -42,18 +44,9 @@ async function load(id: string): Promise<void> {
     chassisWheelbase: dash(chassis?.wheelbase_mm),
     chassisWeight: dash(chassis?.weight_kg),
 
-    gearboxType: formatEnum(parts.gearbox.type),
-    gearboxSpeeds: String(parts.gearbox.speeds),
-    brakesFront: parts.brakes.front,
-    brakesRear: parts.brakes.rear,
-    suspensionFront: parts.suspension.front,
-    suspensionRear: parts.suspension.rear,
-    tyreSupplier: parts.tyre_supplier,
+    ...parts.fields,
   })
-  fillList(
-    section('parts'),
-    Object.entries(parts.other).map(([key, value]) => ({ key: formatEnum(key), value })),
-  )
+  fillList(section('parts'), parts.other)
   fillList(section('articles'), articles.map((a) => a.fields))
   section('articles').querySelector<HTMLElement>('[data-empty]')!.hidden = articles.length > 0
 }

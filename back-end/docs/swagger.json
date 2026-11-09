@@ -288,7 +288,7 @@
         },
         "/cars": {
             "get": {
-                "description": "Retrieve a page of cars filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists.",
+                "description": "Retrieve a page of cars filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists. Parts that break the contract are returned as stored with parts_valid false.",
                 "produces": [
                     "application/json"
                 ],
@@ -954,7 +954,7 @@
         },
         "/races": {
             "get": {
-                "description": "Retrieve a page of races filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists.",
+                "description": "Retrieve a page of races filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists. A payload that breaks its category's contract is returned as stored with payload_valid false.",
                 "produces": [
                     "application/json"
                 ],
@@ -1296,7 +1296,18 @@
                     "type": "string"
                 },
                 "parts": {
+                    "description": "as stored, even when invalid",
                     "type": "object"
+                },
+                "parts_errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "parts_valid": {
+                    "description": "PartsValid is false when Parts breaks the contract (spec 3.4); PartsErrors then says how.",
+                    "type": "boolean"
                 },
                 "season": {
                     "type": "integer"
@@ -1446,7 +1457,18 @@
                     "type": "string"
                 },
                 "payload": {
+                    "description": "as stored, even when invalid",
                     "type": "object"
+                },
+                "payload_errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "payload_valid": {
+                    "description": "PayloadValid is false when Payload breaks its category's contract (spec 3.3); PayloadErrors then says how.",
+                    "type": "boolean"
                 },
                 "race_date": {
                     "type": "string"

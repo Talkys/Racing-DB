@@ -20,8 +20,12 @@ type Race struct {
 	Season     int             `json:"season"`
 	Round      int             `json:"round"`
 	RaceDate   time.Time       `json:"race_date"`
-	Payload    json.RawMessage `json:"payload" swaggertype:"object"`
+	Payload    json.RawMessage `json:"payload" swaggertype:"object"` // as stored, even when invalid
 	CreatedAt  time.Time       `json:"created_at"`
+
+	// PayloadValid is false when Payload breaks its category's contract (spec 3.3); PayloadErrors then says how.
+	PayloadValid  bool     `json:"payload_valid"`
+	PayloadErrors []string `json:"payload_errors,omitempty"`
 }
 
 var Resource = crud.Resource[Race]{
@@ -55,13 +59,13 @@ var Resource = crud.Resource[Race]{
 			"round":       "round",
 		},
 	},
-	// Check is left unset for now: validation of the JSONB payload (spec 3.3/3.4) plugs in here.
+	Check: checkPayload,
 }
 
 // Swagger docs for the routes crud.Handler registers for Resource.
 
 // @Summary Search races
-// @Description Retrieve a page of races filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists.
+// @Description Retrieve a page of races filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists. A payload that breaks its category's contract is returned as stored with payload_valid false.
 // @Tags races
 // @ID search-races
 // @Produce json

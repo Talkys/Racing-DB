@@ -91,6 +91,13 @@ columns each optionally followed by `asc`/`desc` (`?sort=season,desc,round`, or 
 `id` breaks the remaining ties. Swagger lists each resource's filterable and sortable columns. Errors are JSON: `{"status": 400, "error": "..."}`. Draft and future-dated articles,
 and their texts, are never served.
 
+`races.payload` and `cars.parts` are JSONB written by the ETL, checked on every read against their contracts
+(spec 3.3/3.4: required keys, types, enums, ranges; `races.payload` per category, any object for categories without a
+contract). A row that breaks its contract is still served with status 200 and its JSON exactly as stored, flagged with
+`payload_valid: false` / `parts_valid: false` and a `payload_errors` / `parts_errors` list (`"fastest_lap: missing"`),
+and the back end logs a warning. Valid rows carry `true` and no error list. Clients must check the flag before reading
+nested fields; the race and car pages show such rows as raw JSON. Only database errors give a 500.
+
 `/articles/search?q=&lang=&page=` searches article texts: whole words, case-insensitive, no stemming
 (`"phrases"`, `or` and `-word` work). One result per article, using the text in `lang` when it matches, with a
 Markdown-free preview whose matched words are marked. Without `q` it lists every article, newest first.

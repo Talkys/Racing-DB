@@ -24,6 +24,8 @@ const (
 	articleF1      = "75000000-0000-4000-8000-000000000002"
 	articleDraft   = "75000000-0000-4000-8000-000000000003"
 	articleFuture  = "75000000-0000-4000-8000-000000000006" // dated 2099: must stay in the future
+	raceBroken     = "77000000-0000-4000-8000-000000000090" // f1 race with payload {}: must stay invalid
+	carBroken      = "74000000-0000-4000-8000-000000000090" // parts missing most keys: must stay invalid
 	unknownUUID    = "00000000-0000-4000-8000-000000000099"
 	visibleArticle = "published_at IS NOT NULL AND published_at <= now()"
 )
@@ -271,6 +273,78 @@ func TestCombinedQueries(t *testing.T) {
 		}
 		assertError(t, "/races", url.Values{"filter": filters}, http.StatusBadRequest)
 	})
+}
+
+// JSONB that breaks its contract is served as stored and flagged, never as an error.
+func TestJSONBValidation(t *testing.T) {
+	requireDB(t)
+	for _, c := range []struct {
+		path, broken, column, flag, errors string
+		total                              int // rows in the table, to make sure every page was read
+	}{
+		{"races", raceBroken, "payload", "payload_valid", "payload_errors", countRows(t, "races")},
+		{"cars", carBroken, "parts", "parts_valid", "parts_errors", countRows(t, "cars")},
+	} {
+		t.Run(c.path, func(t *testing.T) {
+			var got map[string]any
+			getJSON(t, "/"+c.path+"/"+c.broken, nil, http.StatusOK, &got)
+			if got[c.flag] != false {
+				t.Errorf("%s = %v, want false", c.flag, got[c.flag])
+			}
+			if errs, _ := got[c.errors].([]any); len(errs) == 0 {
+				t.Errorf("%s = %v, want a list of problems", c.errors, got[c.errors])
+			}
+			var stored string
+			if err := testDB.QueryRowContext(t.Context(), "SELECT "+c.column+"::text FROM "+c.path+" WHERE id = $1", c.broken).Scan(&stored); err != nil {
+				t.Fatal(err)
+			}
+			if body, _ := json.Marshal(got[c.column]); !jsonEqual(t, string(body), stored) {
+				t.Errorf("%s = %s, want it as stored: %s", c.column, body, stored)
+			}
+
+			// Every other seeded row follows its contract.
+			seen := 0
+			for page := 1; ; page++ {
+				rows := getList(t, c.path, url.Values{"page": {fmt.Sprint(page)}})
+				for _, row := range rows[:min(len(rows), pageSize)] {
+					seen++
+					if want := row["id"] != c.broken; row[c.flag] != want {
+						t.Errorf("%s %v: %s = %v, want %v (problems: %v)", c.path, row["id"], c.flag, row[c.flag], want, row[c.errors])
+					}
+					if _, ok := row[c.errors]; ok && row[c.flag] == true {
+						t.Errorf("%s %v: %s present on a valid row", c.path, row["id"], c.errors)
+					}
+				}
+				if len(rows) <= pageSize {
+					break
+				}
+			}
+			if seen != c.total {
+				t.Errorf("read %d %s, want %d", seen, c.path, c.total)
+			}
+		})
+	}
+}
+
+func countRows(t *testing.T, table string) int {
+	t.Helper()
+	var n int
+	if err := testDB.QueryRowContext(t.Context(), "SELECT count(*) FROM "+table).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n
+}
+
+func jsonEqual(t *testing.T, a, b string) bool {
+	t.Helper()
+	var x, y any
+	if err := json.Unmarshal([]byte(a), &x); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal([]byte(b), &y); err != nil {
+		t.Fatal(err)
+	}
+	return reflect.DeepEqual(x, y)
 }
 
 func TestHiddenArticles(t *testing.T) {

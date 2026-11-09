@@ -19,8 +19,12 @@ type Car struct {
 	ChassisID  uuid.UUID       `json:"chassis_id"`
 	Name       string          `json:"name"`
 	Season     int             `json:"season"`
-	Parts      json.RawMessage `json:"parts" swaggertype:"object"`
+	Parts      json.RawMessage `json:"parts" swaggertype:"object"` // as stored, even when invalid
 	CreatedAt  time.Time       `json:"created_at"`
+
+	// PartsValid is false when Parts breaks the contract (spec 3.4); PartsErrors then says how.
+	PartsValid  bool     `json:"parts_valid"`
+	PartsErrors []string `json:"parts_errors,omitempty"`
 }
 
 var Resource = crud.Resource[Car]{
@@ -52,13 +56,13 @@ var Resource = crud.Resource[Car]{
 			"category_id": "category_id",
 		},
 	},
-	// Check is left unset for now: validation of the JSONB parts (spec 3.3/3.4) plugs in here.
+	Check: checkParts,
 }
 
 // Swagger docs for the routes crud.Handler registers for Resource.
 
 // @Summary Search cars
-// @Description Retrieve a page of cars filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists.
+// @Description Retrieve a page of cars filtered and sorted by query criteria. Returns up to 26 rows: the 26th only signals that a next page exists. Parts that break the contract are returned as stored with parts_valid false.
 // @Tags cars
 // @ID search-cars
 // @Produce json
