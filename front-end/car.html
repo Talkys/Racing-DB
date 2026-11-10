@@ -49,6 +49,14 @@
             <p data-show-if="loading" class="my-1.5">Loading&hellip;</p>
             <p data-error hidden class="my-1.5 text-flame"></p>
 
+        <div data-show-if="notFound" hidden>
+            <div class="box-title">Not found</div>
+            <div class="box-content">
+                <p class="mt-0" data-field="notFoundMessage"></p>
+                <p class="mb-0"><a href="cars.html">Browse all cars</a></p>
+            </div>
+        </div>
+
         <div data-show-if="loaded" hidden>
             <div class="box-title" data-field="name">Car</div>
             <dl class="box-content kv">
@@ -60,7 +68,7 @@
                 <div>
                     <div class="box-title">Team</div>
                     <dl class="box-content kv">
-                        <dt>Name</dt><dd data-field="teamName"></dd>
+                        <dt>Name</dt><dd><a href="#" data-field="teamName" data-field-href="teamHref"></a></dd>
                         <dt>Country</dt><dd data-field="teamCountry"></dd>
                         <dt>Founded</dt><dd data-field="teamFounded"></dd>
                     </dl>
@@ -68,7 +76,7 @@
                 <div>
                     <div class="box-title">Engine</div>
                     <dl class="box-content kv">
-                        <dt>Model</dt><dd data-field="engineName"></dd>
+                        <dt>Model</dt><dd><a href="#" data-field="engineName" data-field-href="engineHref"></a></dd>
                         <dt>Layout</dt><dd data-field="engineConfiguration"></dd>
                         <dt>Displacement</dt><dd><span data-field="engineDisplacement"></span> cc</dd>
                         <dt>Cylinders</dt><dd data-field="engineCylinders"></dd>
@@ -79,7 +87,7 @@
                 <div>
                     <div class="box-title">Chassis</div>
                     <dl class="box-content kv">
-                        <dt>Model</dt><dd data-field="chassisName"></dd>
+                        <dt>Model</dt><dd><a href="#" data-field="chassisName" data-field-href="chassisHref"></a></dd>
                         <dt>Material</dt><dd data-field="chassisMaterial"></dd>
                         <dt>Wheelbase</dt><dd><span data-field="chassisWheelbase"></span> mm</dd>
                         <dt>Weight</dt><dd><span data-field="chassisWeight"></span> kg</dd>

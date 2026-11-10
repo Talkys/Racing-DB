@@ -129,9 +129,12 @@ export interface CarParts {
   other: Record<string, string>
 }
 
+/** What an article can be about (articles.entity_type). */
+export type EntityType = 'category' | 'circuit' | 'driver' | 'race' | 'team' | 'engine' | 'chassis' | 'car'
+
 export interface Article {
   id: string
-  entity_type: 'category' | 'circuit' | 'driver' | 'race' | 'team' | 'engine' | 'chassis' | 'car'
+  entity_type: EntityType
   entity_id: string
   kind: string
   published_at: string | null

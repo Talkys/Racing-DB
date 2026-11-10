@@ -32,7 +32,10 @@ const TEAM = [1, 2, 3, 4, 5, 6, 7].map((n) => seq(71, n))
 const ENGINE = [1, 2, 3, 4, 5, 6, 7].map((n) => seq(72, n))
 const CHASSIS = [1, 2, 3, 4, 5, 6, 7].map((n) => seq(73, n))
 const CAR = [1, 2, 3].map((n) => seq(74, n))
-const ARTICLE = [1, 2, 3, 4, 5, 6].map((n) => seq(75, n))
+const ARTICLE = [1, 2, 3, 4, 5, 6, 7].map((n) => seq(75, n))
+// No driver has this id: article 7 is about an entity that was deleted (articles.entity_id has no FK). The detail
+// pages and the article page must show it as missing instead of failing.
+const DRIVER_DELETED = seq(70, 999)
 
 const MORE_DRIVERS = [
   ['Lewis', 'Hamilton', 'HAM', 'British'], ['Charles', 'Leclerc', 'LEC', 'Monegasque'], ['Lando', 'Norris', 'NOR', 'British'],
@@ -207,6 +210,8 @@ export const mockData: { [P in EntityPath]: Omit<EntityMap[P], ComputedFields>[]
     { id: 'supercars', name: 'Repco Supercars Championship', description: 'Australia premier touring car racing series, featuring high-powered V8 race cars.', is_active: true },
     { id: 'superbike', name: 'World Superbike (WorldSBK)', description: 'Production-based motorcycle road racing championship featuring modified street bikes.', is_active: true },
     { id: 'dtm', name: 'Deutsche Tourenwagen Masters', description: 'Historic German touring car series operating under GT3 specification rules.', is_active: true },
+    // Inactive on purpose: the pages list it with an "inactive" badge instead of hiding it.
+    { id: 'a1gp', name: 'A1 Grand Prix', description: 'Nation-versus-nation single-seater series that ran from 2005 to 2009.', is_active: false },
   ],
   circuits: [
     { id: CIRCUIT.monaco, name: 'Circuit de Monaco', location: 'Monte Carlo', country: 'Monaco', length_km: 3.337, created_at: created },
@@ -324,6 +329,7 @@ export const mockData: { [P in EntityPath]: Omit<EntityMap[P], ComputedFields>[]
     { id: ARTICLE[4], entity_type: 'driver', entity_id: DRIVER.ver, kind: 'overview', published_at: '2026-03-01T00:00:00Z', created_at: created },
     // Must stay future-dated: mock.test.ts and back-end/scripts/smoke.sh check that it is never served. Don't "fix" it to a near date.
     { id: ARTICLE[5], entity_type: 'driver', entity_id: DRIVER.bag, kind: 'preview', published_at: '2099-01-01T00:00:00Z', created_at: created },
+    { id: ARTICLE[6], entity_type: 'driver', entity_id: DRIVER_DELETED, kind: 'interview', published_at: '2024-01-15T00:00:00Z', created_at: created },
     ...Array.from({ length: LIVE_UPDATES }, (_, i) => ({
       id: seq(75, 101 + i), entity_type: 'race' as const, entity_id: RACE_MONACO_2025, kind: 'live', published_at: liveAt(i), created_at: created,
     })),
@@ -343,6 +349,8 @@ export const mockData: { [P in EntityPath]: Omit<EntityMap[P], ComputedFields>[]
     text(6, 5, 'en', 'Max Verstappen', 'Four-time world champion and Red Bull team leader.',
       '# Max Verstappen\n\nDutch driver, champion from 2021 to 2024.\n', '2026-03-01T00:00:00Z'),
     text(7, 6, 'en', 'Bagnaia season preview (scheduled)', null, 'Future-dated. Must never be served.', '2026-03-01T00:00:00Z'),
+    text(8, 7, 'en', 'An interview with a retired driver', 'The driver this was about is no longer in the database.',
+      '# Interview\n\nKept on purpose: its driver row was deleted, so the "About" link has no target.\n', '2024-01-15T00:00:00Z'),
     ...Array.from({ length: LIVE_UPDATES }, (_, i) => ({
       id: seq(76, 101 + i), article_id: seq(75, 101 + i), language: 'en', title: `Monaco 2025 live, update ${i + 1}`, summary: null,
       body_md: `Lap-by-lap coverage from Monte Carlo, update ${i + 1}.\n`, created_at: liveAt(i), updated_at: liveAt(i),

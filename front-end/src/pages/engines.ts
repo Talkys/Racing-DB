@@ -1,3 +1,4 @@
+import { entityHref } from '../lib/format.ts'
 import { dash, initSearchPage } from '../lib/search-page.ts'
 
 initSearchPage({
@@ -8,5 +9,6 @@ initSearchPage({
     cylinders: String(e.cylinders),
     aspiration: e.aspiration.replace('_', ' ').toLowerCase(),
     power_kw: dash(e.power_kw),
+    href: entityHref('engine', e.id),
   })),
 })

@@ -1,6 +1,6 @@
 // The HTML owns all markup. These helpers only copy fetched values into it:
 //   data-field="x"       -> textContent = fields.x
-//   data-field-href="x"  -> href = fields.x
+//   data-field-href="x"  -> href = fields.x; an empty value removes the href, so the link reads as plain text
 //   data-field-value="x" -> value = fields.x (option, input)
 //   data-show-if="x"     -> hidden unless fields.x is non-empty
 // Elements whose key is absent from `fields` are left untouched, so a page can fill in several passes.
@@ -15,7 +15,8 @@ export function fill(root: ParentNode, fields: Fields): void {
   })
   root.querySelectorAll<HTMLAnchorElement>('[data-field-href]').forEach((el) => {
     const value = fields[el.dataset.fieldHref!]
-    if (value != null) el.href = value
+    if (value === '') el.removeAttribute('href')
+    else if (value != null) el.href = value
   })
   root.querySelectorAll<HTMLOptionElement | HTMLInputElement>('[data-field-value]').forEach((el) => {
     const value = fields[el.dataset.fieldValue!]

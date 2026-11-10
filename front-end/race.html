@@ -49,6 +49,14 @@
             <p data-show-if="loading" class="my-1.5">Loading&hellip;</p>
             <p data-error hidden class="my-1.5 text-flame"></p>
 
+        <div data-show-if="notFound" hidden>
+            <div class="box-title">Not found</div>
+            <div class="box-content">
+                <p class="mt-0" data-field="notFoundMessage"></p>
+                <p class="mb-0"><a href="races.html">Browse all races</a></p>
+            </div>
+        </div>
+
         <div data-show-if="loaded" hidden>
             <div class="grid gap-x-1.5 md:grid-cols-2">
                 <div>
@@ -57,13 +65,13 @@
                         <dt>Date</dt><dd data-field="date"></dd>
                         <dt>Season</dt><dd><span data-field="season"></span> &middot; Round <span data-field="round"></span></dd>
                         <dt>Category</dt><dd><a href="#" data-field="category" data-field-href="categoryHref"></a></dd>
-                        <dt>Winner</dt><dd data-field="winner"></dd>
+                        <dt>Winner</dt><dd><a href="#" data-field="winner" data-field-href="winnerHref"></a></dd>
                     </dl>
                 </div>
                 <div>
                     <div class="box-title">Circuit</div>
                     <dl class="box-content kv">
-                        <dt>Name</dt><dd data-field="circuitName"></dd>
+                        <dt>Name</dt><dd><a href="#" data-field="circuitName" data-field-href="circuitHref"></a></dd>
                         <dt>Location</dt><dd data-field="circuitLocation"></dd>
                         <dt>Country</dt><dd data-field="circuitCountry"></dd>
                         <dt>Length</dt><dd><span data-field="circuitLength"></span> km</dd>

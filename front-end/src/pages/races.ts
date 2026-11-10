@@ -1,5 +1,5 @@
 import { getMany } from '../api/client.ts'
-import { raceHref } from '../lib/format.ts'
+import { hrefOf, raceHref } from '../lib/format.ts'
 import { dash, initSearchPage } from '../lib/search-page.ts'
 
 initSearchPage({
@@ -17,10 +17,13 @@ initSearchPage({
         name: r.name,
         href: raceHref(r.id),
         category: categories.get(r.category_id)?.name ?? r.category_id,
+        categoryHref: hrefOf('category', r.category_id, categories.has(r.category_id)),
         season: String(r.season),
         round: String(r.round),
         circuit: dash(circuits.get(r.circuit_id)?.name),
+        circuitHref: hrefOf('circuit', r.circuit_id, circuits.has(r.circuit_id)),
         winner: winner ? `${winner.first_name} ${winner.last_name}` : '-',
+        winnerHref: hrefOf('driver', r.winner_id, !!winner),
       }
     })
   },

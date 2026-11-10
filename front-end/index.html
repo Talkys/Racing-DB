@@ -56,7 +56,7 @@
             <div class="box-content" data-section="categories">
                 <ul class="m-0 list-none p-0">
                     <template>
-                        <li>&bull; <a href="#" data-field="name" data-field-href="href"></a></li>
+                        <li>&bull; <a href="#" data-field="name" data-field-href="href"></a> <span class="inactive-badge" data-show-if="inactive" hidden>inactive</span></li>
                     </template>
                 </ul>
             </div>
@@ -68,13 +68,13 @@
                 <div class="flex gap-2">
                     <div class="photo shrink-0" data-field="photo">[ PHOTO ]</div>
                     <div>
-                        <b class="text-sm text-gold" data-field="name"></b> <span class="text-[#aaa]">(<span data-field="code"></span>)</span><br>
+                        <a href="#" class="text-sm font-bold" data-field="name" data-field-href="driverHref"></a> <span class="text-[#aaa]">(<span data-field="code"></span>)</span><br>
                         <b>Nationality:</b> <span data-field="nationality"></span>
                     </div>
                 </div>
                 <div data-show-if="teaser" hidden>
                     <hr>
-                    <b>Biography Teaser:</b> <span data-field="teaser"></span> <a href="#" data-field-href="href">[Read Full Bio &gt;&gt;]</a>
+                    <b>Biography Teaser:</b> <span data-field="teaser"></span> <a href="#" data-field-href="bioHref">[Read Full Bio &gt;&gt;]</a>
                 </div>
             </div>
 
@@ -95,9 +95,9 @@
                             <tr>
                                 <td data-field="date"></td>
                                 <td><a href="#" class="font-bold" data-field="name" data-field-href="href"></a></td>
-                                <td data-field="category"></td>
-                                <td data-field="circuit"></td>
-                                <td data-field="winner"></td>
+                                <td><a href="#" data-field="category" data-field-href="categoryHref"></a></td>
+                                <td><a href="#" data-field="circuit" data-field-href="circuitHref"></a></td>
+                                <td><a href="#" data-field="winner" data-field-href="winnerHref"></a></td>
                             </tr>
                         </template>
                     </tbody>

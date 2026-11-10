@@ -1,7 +1,8 @@
 import { ApiError, searchArticles } from '../api/client.ts'
 import type { PreviewSegment } from '../api/types.ts'
 import { fill, fillList, section, showError } from '../lib/dom.ts'
-import { articleHref, entityHref, formatDate } from '../lib/format.ts'
+import { aboutFields, resolveRefs } from '../lib/entities.ts'
+import { articleHref, formatDate } from '../lib/format.ts'
 
 // articles.html?q=<words>[&page=N]. Without q, lists every article newest first.
 // Each result shows the text in the browser's language when that text qualifies.
@@ -33,6 +34,7 @@ function renderPreview(el: HTMLElement, segments: PreviewSegment[]): void {
 
 async function load(): Promise<void> {
   const { items, hasNext } = await searchArticles(q, lang, page)
+  const target = await resolveRefs(items)
 
   if (q) document.title = `"${q}" - Articles - RaceDB.org`
   fill(document.body, { summary: q ? `Articles matching "${q}"` : 'All articles, newest first' })
@@ -40,19 +42,14 @@ async function load(): Promise<void> {
   const results = section('results')
   fillList(
     results,
-    items.map((r) => {
-      const aboutHref = entityHref(r.entity_type, r.entity_id)
-      return {
-        title: r.title ?? '(untitled)',
-        href: articleHref(r.id, r.language ?? undefined),
-        language: r.language ?? 'no text yet',
-        kind: r.kind,
-        about: r.entity_type,
-        aboutHref: aboutHref ?? '',
-        aboutPlain: aboutHref ? '' : r.entity_type,
-        published: formatDate(r.published_at),
-      }
-    }),
+    items.map((r) => ({
+      title: r.title ?? '(untitled)',
+      href: articleHref(r.id, r.language ?? undefined),
+      language: r.language ?? 'no text yet',
+      kind: r.kind,
+      ...aboutFields(r, target(r)),
+      published: formatDate(r.published_at),
+    })),
   )
   results.querySelectorAll<HTMLElement>('[data-preview]').forEach((el, i) => {
     renderPreview(el, items[i].preview)

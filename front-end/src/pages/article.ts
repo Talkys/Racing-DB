@@ -1,7 +1,8 @@
 import { get } from '../api/client.ts'
 import { textsOf } from '../lib/articles.ts'
 import { fill, fillList, section, showError } from '../lib/dom.ts'
-import { articleHref, entityHref, formatDate, formatDateTime } from '../lib/format.ts'
+import { aboutFields, resolveRefs } from '../lib/entities.ts'
+import { articleHref, formatDate, formatDateTime } from '../lib/format.ts'
 import { pickLanguage } from '../lib/language.ts'
 import { renderMarkdown } from '../lib/markdown.ts'
 
@@ -10,20 +11,21 @@ import { renderMarkdown } from '../lib/markdown.ts'
 
 async function load(id: string, requestedLang: string | null): Promise<void> {
   const article = await get('articles', id)
-  if (!article) throw new Error(`Article with ID '${id}' does not exist.`)
+  if (!article) {
+    fill(document.body, { notFound: '1', notFoundMessage: `No article with ID '${id}' is published. It may be a draft, or have been removed.` })
+    return
+  }
 
-  const texts = (await textsOf(article.id)).sort((a, b) => a.language.localeCompare(b.language))
+  const [allTexts, target] = await Promise.all([textsOf(article.id), resolveRefs([article])])
+  const texts = allTexts.sort((a, b) => a.language.localeCompare(b.language))
   const lang = pickLanguage(texts.map((t) => t.language), requestedLang)
   const text = texts.find((t) => t.language === lang)
-  const entityPage = entityHref(article.entity_type, article.entity_id)
 
   if (text) document.title = `${text.title} - RaceDB.org`
   fill(document.body, {
     loaded: '1',
     title: text?.title ?? 'Article',
-    entityType: article.entity_type,
-    entityHref: entityPage ?? '',
-    entityPlain: entityPage ? '' : article.entity_type,
+    ...aboutFields(article, target(article)),
     kind: article.kind,
     published: formatDate(article.published_at),
     noTexts: text ? '' : '1',

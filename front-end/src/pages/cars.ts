@@ -1,5 +1,5 @@
 import { getMany } from '../api/client.ts'
-import { carHref } from '../lib/format.ts'
+import { carHref, hrefOf } from '../lib/format.ts'
 import { dash, initSearchPage } from '../lib/search-page.ts'
 
 initSearchPage({
@@ -16,9 +16,13 @@ initSearchPage({
       href: carHref(c.id),
       season: String(c.season),
       category: categories.get(c.category_id)?.name ?? c.category_id,
+      categoryHref: hrefOf('category', c.category_id, categories.has(c.category_id)),
       team: dash(teams.get(c.team_id)?.short_name),
+      teamHref: hrefOf('team', c.team_id, teams.has(c.team_id)),
       engine: dash(engines.get(c.engine_id)?.name),
+      engineHref: hrefOf('engine', c.engine_id, engines.has(c.engine_id)),
       chassis: dash(chassis.get(c.chassis_id)?.name),
+      chassisHref: hrefOf('chassis', c.chassis_id, chassis.has(c.chassis_id)),
     }))
   },
 })

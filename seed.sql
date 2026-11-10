@@ -12,7 +12,8 @@ INSERT INTO categories (id, name, description, is_active) VALUES
   ('f2', 'Formula 2', 'Official feeder series for Formula 1 featuring identical chassis and engine specifications to test driver skill.', true),
   ('supercars', 'Repco Supercars Championship', 'Australia premier touring car racing series, featuring high-powered V8 race cars.', true),
   ('superbike', 'World Superbike (WorldSBK)', 'Production-based motorcycle road racing championship featuring modified street bikes.', true),
-  ('dtm', 'Deutsche Tourenwagen Masters', 'Historic German touring car series operating under GT3 specification rules.', true);
+  ('dtm', 'Deutsche Tourenwagen Masters', 'Historic German touring car series operating under GT3 specification rules.', true),
+  ('a1gp', 'A1 Grand Prix', 'Nation-versus-nation single-seater series that ran from 2005 to 2009.', false);
 
 INSERT INTO circuits (id, name, location, country, length_km, created_at) VALUES
   ('23fa3b45-df13-4f9e-a864-44aa4cf81190', 'Circuit de Monaco', 'Monte Carlo', 'Monaco', 3.337, '2026-01-01T00:00:00Z'),
@@ -161,6 +162,7 @@ INSERT INTO articles (id, entity_type, entity_id, kind, published_at, created_at
   ('75000000-0000-4000-8000-000000000004', 'team', '71000000-0000-4000-8000-000000000001', 'history', '2026-02-01T00:00:00Z', '2026-01-01T00:00:00Z'),
   ('75000000-0000-4000-8000-000000000005', 'driver', 'b11a43a8-4e36-47a8-8e68-301fc1cae6ef', 'overview', '2026-03-01T00:00:00Z', '2026-01-01T00:00:00Z'),
   ('75000000-0000-4000-8000-000000000006', 'driver', 'a22b54b9-5f47-48b9-9f79-412fd2dbf7f0', 'preview', '2099-01-01T00:00:00Z', '2026-01-01T00:00:00Z'),
+  ('75000000-0000-4000-8000-000000000007', 'driver', '70000000-0000-4000-8000-000000000999', 'interview', '2024-01-15T00:00:00Z', '2026-01-01T00:00:00Z'),
   ('75000000-0000-4000-8000-000000000101', 'race', '77000000-0000-4000-8000-000000000004', 'live', '2025-05-25T13:00:00Z', '2026-01-01T00:00:00Z'),
   ('75000000-0000-4000-8000-000000000102', 'race', '77000000-0000-4000-8000-000000000004', 'live', '2025-05-25T13:02:00Z', '2026-01-01T00:00:00Z'),
   ('75000000-0000-4000-8000-000000000103', 'race', '77000000-0000-4000-8000-000000000004', 'live', '2025-05-25T13:04:00Z', '2026-01-01T00:00:00Z'),
@@ -215,6 +217,10 @@ Texto disponível somente em português.
 Dutch driver, champion from 2021 to 2024.
 ', '2026-03-01T00:00:00Z', '2026-03-01T00:00:00Z'),
   ('76000000-0000-4000-8000-000000000007', '75000000-0000-4000-8000-000000000006', 'en', 'Bagnaia season preview (scheduled)', NULL, 'Future-dated. Must never be served.', '2026-03-01T00:00:00Z', '2026-03-01T00:00:00Z'),
+  ('76000000-0000-4000-8000-000000000008', '75000000-0000-4000-8000-000000000007', 'en', 'An interview with a retired driver', 'The driver this was about is no longer in the database.', '# Interview
+
+Kept on purpose: its driver row was deleted, so the "About" link has no target.
+', '2024-01-15T00:00:00Z', '2024-01-15T00:00:00Z'),
   ('76000000-0000-4000-8000-000000000101', '75000000-0000-4000-8000-000000000101', 'en', 'Monaco 2025 live, update 1', NULL, 'Lap-by-lap coverage from Monte Carlo, update 1.
 ', '2025-05-25T13:00:00Z', '2025-05-25T13:00:00Z'),
   ('76000000-0000-4000-8000-000000000102', '75000000-0000-4000-8000-000000000102', 'en', 'Monaco 2025 live, update 2', NULL, 'Lap-by-lap coverage from Monte Carlo, update 2.

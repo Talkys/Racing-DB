@@ -2,7 +2,7 @@ import { getMany, search } from '../api/client.ts'
 import type { Driver } from '../api/types.ts'
 import { entityArticles, latestArticles } from '../lib/articles.ts'
 import { fill, fillList, section, showError } from '../lib/dom.ts'
-import { formatDate, raceHref } from '../lib/format.ts'
+import { entityHref, formatDate, hrefOf, raceHref } from '../lib/format.ts'
 
 const NONE = '-'
 const BULLETS = ' ••• '
@@ -11,7 +11,8 @@ const fullName = (d: Driver) => `${d.first_name} ${d.last_name}`
 
 async function load(): Promise<void> {
   const [categories, drivers, races, articles] = await Promise.all([
-    search('categories', { sort: 'name,asc' }),
+    // Inactive categories are listed last, with a badge.
+    search('categories', { sort: ['is_active,desc', 'name'] }),
     search('drivers', { sort: 'last_name,asc' }),
     search('races', { sort: 'race_date,desc' }),
     latestArticles(3),
@@ -31,8 +32,11 @@ async function load(): Promise<void> {
       name: race.name,
       href: raceHref(race.id),
       category: raceCategories.get(race.category_id)?.name ?? race.category_id,
+      categoryHref: hrefOf('category', race.category_id, raceCategories.has(race.category_id)),
       circuit: circuits.get(race.circuit_id)?.name ?? NONE,
+      circuitHref: hrefOf('circuit', race.circuit_id, circuits.has(race.circuit_id)),
       winner: winner ? fullName(winner) : NONE,
+      winnerHref: hrefOf('driver', race.winner_id, !!winner),
     }
   })
 
@@ -49,7 +53,7 @@ async function load(): Promise<void> {
   // Browse vaults
   fillList(
     section('categories'),
-    categories.items.map((c) => ({ name: c.name, href: `races.html?col=category_id&op=eq&q=${encodeURIComponent(c.id)}` })),
+    categories.items.map((c) => ({ name: c.name, href: entityHref('category', c.id), inactive: c.is_active ? '' : '1' })),
   )
 
   // Latest races
@@ -63,11 +67,12 @@ async function load(): Promise<void> {
     const text = bio?.text
     fill(section('featured'), {
       name: `${featured.last_name}, ${featured.first_name}`,
+      driverHref: entityHref('driver', featured.id),
       code: featured.code,
       nationality: featured.nationality,
       photo: `[ PHOTO: ${fullName(featured)} ]`,
       teaser: text?.summary ?? text?.title,
-      href: bio?.fields.href,
+      bioHref: bio?.fields.href,
     })
   }
 
@@ -77,7 +82,7 @@ async function load(): Promise<void> {
   // Driver index
   fillList(
     section('drivers'),
-    drivers.items.slice(0, 5).map((d) => ({ name: fullName(d), code: d.code, href: `drivers.html?col=code&op=eq&q=${encodeURIComponent(d.code)}` })),
+    drivers.items.slice(0, 5).map((d) => ({ name: fullName(d), code: d.code, href: entityHref('driver', d.id) })),
   )
 }
 

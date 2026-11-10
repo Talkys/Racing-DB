@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team - RaceDB.org</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body class="body-class">
+
+<div class="page">
+    <div class="checkered-bar"></div>
+
+    <header class="header">
+        <div>
+            <h1 class="logo-title"><a href="index.html" class="no-underline hover:no-underline">RaceDB<small>.org</small></a></h1>
+            <div class="logo-tagline">The Internet Motorsport Database - Since 2001</div>
+        </div>
+        <form action="#" class="m-0 text-right" data-header-search>
+            <label for="header-q" class="search-label">Search Database:</label>
+            <input type="text" id="header-q" name="q" size="14" class="field">
+            <select name="type" class="field">
+                <option value="drivers.html" data-col="last_name">Drivers</option>
+                <option value="cars.html" data-col="name">Cars</option>
+                <option value="races.html" data-col="name">Grand Prix</option>
+                <option value="circuits.html" data-col="name">Circuits</option>
+                <option value="teams.html" data-col="name">Teams</option>
+                <option value="articles.html" data-col="title">Articles</option>
+            </select>
+            <button type="submit" class="btn">Go!</button>
+        </form>
+    </header>
+
+    <nav class="nav-bar">
+        <a href="index.html">Home</a>
+        <a href="categories.html">Categories</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="races.html">Races</a>
+        <a href="circuits.html">Circuits</a>
+        <a href="teams.html" aria-current="page">Teams</a>
+        <a href="cars.html">Cars</a>
+        <a href="engines.html">Engines</a>
+        <a href="chassis.html">Chassis</a>
+        <a href="articles.html">Articles</a>
+    </nav>
+
+    <div class="p-1.5">
+        <p class="mt-0 mb-1.5"><a href="teams.html">&lt;&lt; Back to teams</a></p>
+            <p data-show-if="loading" class="my-1.5">Loading&hellip;</p>
+            <p data-error hidden class="my-1.5 text-flame"></p>
+
+        <div data-show-if="notFound" hidden>
+            <div class="box-title">Not found</div>
+            <div class="box-content">
+                <p class="mt-0" data-field="notFoundMessage"></p>
+                <p class="mb-0"><a href="teams.html">Browse all teams</a></p>
+            </div>
+        </div>
+
+        <div data-show-if="loaded" hidden>
+            <div class="box-title" data-field="name">Team</div>
+            <dl class="box-content kv">
+                <dt>Short name</dt><dd><span data-field="shortName"></span></dd>
+                <dt>Country</dt><dd><span data-field="country"></span></dd>
+                <dt>Founded</dt><dd><span data-field="founded"></span></dd>
+            </dl>
+
+            <div class="box-title">Cars</div>
+            <div class="box-content" data-section="cars">
+                <table class="data-table">
+                    <thead><tr><th>Season</th><th>Car</th><th>Category</th></tr></thead>
+                    <tbody>
+                        <template>
+                            <tr><td data-field="season"></td><td><a href="#" class="font-bold" data-field="name" data-field-href="href"></a></td><td><a href="#" data-field="category" data-field-href="categoryHref"></a></td></tr>
+                        </template>
+                    </tbody>
+                </table>
+                <p data-empty hidden class="mb-0">No cars.</p>
+                <p data-show-if="more" hidden class="mb-0 text-right"><a href="#" data-field-href="allHref">All cars &gt;&gt;</a></p>
+            </div>
+
+            <div class="box-title">Articles</div>
+            <div class="box-content" data-section="articles">
+                <ul class="m-0 list-none p-0">
+                    <template>
+                        <li>&bull; <a href="#" class="font-bold" data-field="title" data-field-href="href"></a>
+                            <span class="text-[10px] text-[#8899aa]">(<span data-field="kind"></span>, <span data-field="published"></span>, languages: <span data-field="languages"></span>)</span>
+                        </li>
+                    </template>
+                </ul>
+                <p data-empty hidden class="m-0">No articles.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkered-bar"></div>
+
+    <footer class="footer">
+        &copy; 2001–2026 RaceDB. All Rights Reserved
+    </footer>
+
+</div>
+
+<script type="module" src="/src/lib/header.ts"></script>
+<script type="module" src="/src/pages/team.ts"></script>
+</body>
+</html>

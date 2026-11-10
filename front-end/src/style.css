@@ -24,6 +24,10 @@
   a {
     @apply text-gold underline hover:text-flame hover:no-underline;
   }
+  /* A reference with no target (see data-field-href in lib/dom.ts) reads as plain text. */
+  a:not([href]) {
+    @apply text-inherit no-underline hover:text-inherit;
+  }
   hr {
     @apply my-2 border-0 border-t border-edge;
   }
@@ -138,6 +142,10 @@
 
   .new-badge {
     @apply bg-yellow-300 px-0.5 text-[9px] font-bold text-red-600 border border-red-600;
+  }
+
+  .inactive-badge {
+    @apply bg-[#555] px-0.5 text-[9px] font-bold uppercase text-[#ddd] border border-[#888];
   }
 
   .photo {

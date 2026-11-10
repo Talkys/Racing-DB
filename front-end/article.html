@@ -48,11 +48,19 @@
             <p data-show-if="loading" class="my-1.5">Loading&hellip;</p>
             <p data-error hidden class="my-1.5 text-flame"></p>
 
+        <div data-show-if="notFound" hidden>
+            <div class="box-title">Not found</div>
+            <div class="box-content">
+                <p class="mt-0" data-field="notFoundMessage"></p>
+                <p class="mb-0"><a href="articles.html">Browse all articles</a></p>
+            </div>
+        </div>
+
         <div data-show-if="loaded" hidden>
             <div class="box-title" data-field="title">Article</div>
             <div class="box-content">
                 <p class="mt-0 text-[10px] text-[#8899aa]">
-                    About: <a href="#" data-show-if="entityHref" data-field="entityType" data-field-href="entityHref" hidden></a><span data-show-if="entityPlain" data-field="entityPlain" hidden></span>
+                    About: <a href="#" data-field="about" data-field-href="aboutHref"></a>
                     &bull; <span data-field="kind"></span> &bull; Published <span data-field="published"></span>
                 </p>
 
